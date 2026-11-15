@@ -1,19 +1,29 @@
-const ENDPOINT = 'https://world.openfoodfacts.org/cgi/search.pl'
+const ENDPOINT = 'https://search.openfoodfacts.org/search'
 
 export async function searchOpenFoodFacts(query, signal) {
-  const params = new URLSearchParams({ search_terms: query, search_simple: '1', action: 'process', json: '1', page_size: '8', fields: 'code,product_name,product_name_es,brands,categories,countries,alcohol_100g,image_front_url,image_url' })
+  const params = new URLSearchParams({
+    q: query,
+    langs: 'es,en',
+    page_size: '8',
+    fields: 'code,product_name,brands,categories,countries,alcohol_100g,image_url'
+  })
   const response = await fetch(`${ENDPOINT}?${params}`, { signal })
   if (!response.ok) throw new Error('No se pudo consultar Open Food Facts')
   const data = await response.json()
-  return (data.products || []).filter((product) => product.product_name || product.product_name_es).map((product) => ({
-    name: product.product_name_es || product.product_name || '',
-    brand: product.brands || '',
-    category: inferCategory(product.categories || ''),
-    country: product.countries || '',
+  return (data.hits || []).filter((product) => product.product_name).map((product) => ({
+    name: product.product_name || '',
+    brand: asText(product.brands),
+    category: inferCategory(asText(product.categories)),
+    country: asText(product.countries),
     alcohol_percentage: product.alcohol_100g ? Number(product.alcohol_100g) : '',
-    image_url: product.image_front_url || product.image_url || '',
-    code: product.code
+    image_url: product.image_url || '',
+    code: product.code || ''
   }))
+}
+
+function asText(value) {
+  if (Array.isArray(value)) return value.filter(Boolean).join(', ')
+  return value || ''
 }
 
 function inferCategory(source) {
