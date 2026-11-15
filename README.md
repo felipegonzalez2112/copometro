@@ -18,6 +18,16 @@ npm run preview
 
 La compilación produce el manifest y el service worker. Publicá el sitio bajo HTTPS para instalarlo en Android. Las imágenes de OFF y Supabase Storage se guardan en caché al visitarlas. La última colección y sus calificaciones se mantienen en una copia local para consulta sin conexión.
 
+## Publicar en GitHub Pages
+
+El workflow `.github/workflows/deploy.yml` construye y publica `dist` automáticamente cada vez que se actualiza `main`. Para este repositorio, la URL esperada es `https://felipegonzalez2112.github.io/copometro/`. El build detecta el nombre del repositorio desde GitHub Actions y agrega el prefijo `/copometro/`; en local conserva `/`.
+
+1. En GitHub abrí **Settings → Pages** y elegí **GitHub Actions** en **Build and deployment → Source**.
+2. Hacé push a `main` o ejecutá manualmente **Actions → Deploy ChinChin to GitHub Pages → Run workflow**.
+3. Esperá que termine el workflow y abrí la URL que aparece en el paso `Deploy to GitHub Pages`.
+
+La publicación funciona sin configurar Supabase, pero en ese caso los datos quedan guardados en el navegador de cada dispositivo. Para sincronizar mediante Supabase, creá estas variables del repositorio en **Settings → Secrets and variables → Actions → Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` y, opcionalmente, `VITE_SUPABASE_BUCKET` (por defecto `drink-images`). Después volvé a ejecutar el workflow. Nunca agregues `service_role` ni una clave `sb_secret_…` a las variables del cliente.
+
 ## Persistencia y privacidad
 
 La clave publishable de Supabase se puede incluir en el cliente; nunca agregues una `service_role` ni una clave `sb_secret_…` a `.env` de Vite. Sin autenticación, Supabase identifica al cliente como `anon`. Por eso las políticas de ejemplo de `schema.sql` habilitan acceso de lectura y escritura para `anon`: cualquiera que conozca la URL pública y la clave publishable podría acceder a esos datos. Esas políticas cumplen el uso personal sin login, pero **no vuelven privada la base**. Para mantener la colección privada, dejá Supabase sin configurar y usá el modo local; si se requiere sincronización remota privada, hará falta autenticación o un backend con autorización.

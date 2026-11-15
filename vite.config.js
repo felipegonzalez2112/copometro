@@ -2,7 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1]
+const isGitHubPagesBuild = process.env.GITHUB_ACTIONS === 'true'
+const base = isGitHubPagesBuild && repositoryName && !repositoryName.endsWith('.github.io')
+  ? `/${repositoryName}/`
+  : '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -14,10 +21,12 @@ export default defineConfig({
         description: 'Tu colección personal de bebidas.',
         theme_color: '#10100f',
         background_color: '#10100f',
+        lang: 'es',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         icons: [
-          { src: '/chinchin-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }
+          { src: `${base}chinchin-icon.svg`, sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }
         ]
       },
       workbox: {
