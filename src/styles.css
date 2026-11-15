@@ -8,3 +8,93 @@
 @media(max-width:380px){.hero h1{font-size:39px}.hero-count{width:96px}.drink-image{height:150px}.detail-hero{grid-template-columns:105px 1fr;gap:13px}.detail-image{height:155px}.detail-copy h1{font-size:25px}}
 @media(min-width:381px) and (max-width:600px){.hero h1{font-size:clamp(40px,10.7vw,46px)}.hero-count{width:108px;right:2px}.hero-copy{max-width:calc(100% - 112px)}.hero-copy p{max-width:100%}.drink-image{height:clamp(168px,42vw,190px)}.detail-hero{grid-template-columns:minmax(125px,34%) minmax(0,1fr);gap:20px}.detail-copy{min-width:0}.detail-copy h1{overflow-wrap:anywhere}.detail-actions{flex-wrap:wrap}}
 @media(max-width:600px){.app-shell{min-height:100dvh}.topbar{padding-left:max(17px,env(safe-area-inset-left));padding-right:max(17px,env(safe-area-inset-right));padding-top:env(safe-area-inset-top)}.modal{max-height:94dvh;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.mobile-add{right:max(18px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom))}.detail-page{padding-bottom:calc(90px + env(safe-area-inset-bottom))}}
+@media(min-width:381px) and (max-width:600px){
+  body{font-size:16px}
+  .topbar{height:70px;padding-left:20px;padding-right:20px}
+  .brand{font-size:19px;min-height:46px}
+  .brand-icon{width:34px;height:34px;font-size:19px}
+  .connection-pill{font-size:12px;gap:7px;padding:9px 12px}
+  .hero{height:275px;margin:0 20px}
+  .hero .eyebrow,.collection-heading .eyebrow,.section-heading .eyebrow{font-size:10px;letter-spacing:1.6px}
+  .hero h1{font-size:clamp(43px,10.5vw,49px);margin:15px 0}
+  .hero-copy p{font-size:14px;line-height:1.55}
+  .hero-count{width:105px;height:115px;top:80px;padding-left:13px}
+  .hero-count strong{font-size:42px}
+  .hero-count span{font-size:11px;line-height:1.5}
+  .collection{margin:34px 20px 0}
+  .collection-heading h2{font-size:28px}
+  .collection-search{height:48px;padding:0 14px}
+  .collection-search input{font-size:15px}
+  .filter-row{gap:9px;padding:18px 0}
+  .filter-chip{font-size:13px;min-height:42px;padding:9px 15px}
+  .drink-grid{gap:13px}
+  .drink-image{height:clamp(180px,43vw,210px)}
+  .card-info{padding:13px}
+  .card-title-row{min-height:94px}
+  .card-title-row .eyebrow{font-size:10px;letter-spacing:1.25px}
+  .card-title-row h3{font-size:18px;line-height:1.22;margin:7px 0 5px}
+  .card-title-row p{font-size:12px}
+  .card-arrow{width:17px;height:17px}
+  .card-score{font-size:12px;padding-top:12px}
+  .card-score strong{font-size:17px}
+  .unrated{font-size:11px}
+  .empty-state{padding:30px 22px}
+  .empty-state h3{font-size:25px}
+  .empty-state p{font-size:14px;line-height:1.6}
+  .footer-note{margin-left:20px;margin-right:20px;font-size:9px}
+  .button{min-height:44px;font-size:14px;padding-left:16px;padding-right:16px}
+  .add-button{min-height:42px}
+  .mobile-add{height:58px;width:58px}
+  .detail-page{padding:26px 20px 100px}
+  .back-link{min-height:44px;font-size:14px;margin-bottom:18px}
+  .detail-hero{grid-template-columns:minmax(140px,36%) minmax(0,1fr);gap:22px;padding-bottom:28px}
+  .detail-image{height:205px}
+  .detail-copy h1{font-size:32px;line-height:1.15}
+  .detail-brand{font-size:14px}
+  .detail-facts{font-size:12px;gap:9px;margin-top:15px}
+  .detail-actions{gap:8px;margin-top:20px}
+  .detail-actions .button{min-height:42px;font-size:12px;padding:0 12px}
+  .tasting-section{padding-top:28px}
+  .section-heading h2{font-size:25px}
+  .section-heading .button{min-height:44px;min-width:44px}
+  .rating-entry{padding:17px}
+  .rating-entry-top{gap:12px;flex-wrap:wrap}
+  .rating-big strong{font-size:23px}
+  .tasted-date{font-size:11px}
+  .rating-comment{font-size:17px;line-height:1.6}
+  .would-again{font-size:12px}
+  .empty-rating{min-height:130px;font-size:13px;padding:18px}
+  .text-link{font-size:13px;min-height:40px}
+  .inline-form{padding:17px}
+  .inline-form-title h3{font-size:21px}
+  .field{gap:9px}
+  .field label{font-size:13px}
+  .field input,.field select{height:46px;font-size:15px;padding:10px 12px}
+  .field textarea{font-size:15px;padding:12px;line-height:1.55}
+  .form-grid{gap:12px}
+  .form-actions{gap:10px;margin-top:5px}
+  .form-actions .button{min-height:46px;font-size:14px;padding:0 14px}
+  .modal{padding:23px 20px calc(22px + env(safe-area-inset-bottom))}
+  .modal-header h2{font-size:28px}
+  .modal-header{padding-bottom:17px;margin-bottom:18px}
+  .drink-form,.rating-form{gap:16px}
+  .off-search{padding:16px}
+  .off-title{margin-bottom:12px}
+  .off-title strong{font-size:14px}
+  .off-label{font-size:11px}
+  .search-row{height:48px;padding-left:12px}
+  .search-row input{font-size:14px}
+  .search-row .button{min-height:38px;font-size:13px}
+  .off-result{gap:12px;padding:8px}
+  .off-result .drink-image{height:50px;width:50px}
+  .off-result strong{font-size:13px}
+  .off-result small{font-size:11px}
+  .image-picker{min-height:136px}
+  .image-picker>.drink-image{height:112px;width:92px}
+  .image-prompt span{font-size:13px}
+  .image-prompt small{font-size:11px}
+  .upload-button{min-height:40px;font-size:12px}
+  .form-divider span{font-size:11px}
+  .toggle-choice{height:46px;font-size:13px;padding:0 12px}
+  .toast{top:80px;font-size:13px;padding:12px 15px}
+}
