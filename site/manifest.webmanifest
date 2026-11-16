@@ -7,7 +7,7 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#11100e",
-  "theme_color": "#11100e",
+  "background_color": "#101617",
+  "theme_color": "#101617",
   "icons": [{ "src": "./chinchin-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }

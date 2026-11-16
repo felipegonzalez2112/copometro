@@ -205,3 +205,47 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .detail-photo { height: 177px; }
   .actions .button { padding: 0 8px; font-size: 12px; }
 }
+
+/* Paleta grafito y salvia */
+:root {
+  background: #101617;
+  color: #edf2ef;
+  --bg: #101617;
+  --panel: #182020;
+  --panel-2: #202929;
+  --line: #303b3a;
+  --muted: #a1aeaa;
+  --gold: #79b9a8;
+  --gold-light: #b8e2d5;
+}
+body { background: #101617; color: #edf2ef; }
+.topbar { border-color: #293534; background: rgb(16 22 23 / 96%); }
+.brand-mark { border-color: #527d72; color: #b8e2d5; }
+.gold { color: #79b9a8; }
+.overline { color: #8bc5b4; }
+.collection-count strong { color: #b8e2d5; }
+.section-title small { background: #243a36; color: #b8e2d5; }
+.search { border-color: #394745; background: #171e1f; }
+.filter { border-color: #374341; color: #b3c0bb; }
+.filter.active { border-color: #527d72; background: #203732; color: #c4eadc; }
+.drink-card { border-color: #2e3a38; background: #182020; }
+.drink-card:hover { border-color: #527d72; }
+.card-photo { background: radial-gradient(ellipse at 50% 76%, #2d4642 0, #202c2b 42%, #192020 78%); }
+.photo-category { border-color: #42635a; background: rgb(15 22 22 / 88%); color: #c4eadc; }
+.card-copy h3 { color: #edf2ef; }
+.card-copy p, .card-rating { color: #a8b5b0; }
+.card-rating { border-color: #2c3937; }
+.card-rating strong { color: #b8e2d5; }
+.card-rating svg, .rating-score svg { fill: #79b9a8; stroke: #79b9a8; }
+.empty-icon { border-color: #476960; color: #8bc5b4; }
+.button.primary, .fab { background: #79b9a8; border-color: #a3d6c8; color: #10201d; }
+.button.primary:hover, .fab:hover { background: #9bd1c2; }
+.detail-photo { border-color: #303d3a; background: radial-gradient(ellipse at 50% 70%, #2d4642, #1b2524 72%); }
+.facts span { border-color: #374341; color: #ced8d2; }
+.rating { border-color: #303b39; background: #171e1f; }
+.rating-score strong, .again.yes, .score-field strong { color: #b8e2d5; }
+.modal { border-color: #374340; background: #192020; }
+.photo-select { border-color: #496b61; background: #202929; }
+.field input, .field select, .field textarea, .again-choice { border-color: #3d4a47; background-color: #121819; }
+.again-choice input, .score-field input { accent-color: #79b9a8; }
+.toast { border-color: #476960; background: #1c2c29; color: #d4eee5; }
