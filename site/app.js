@@ -192,5 +192,5 @@ app.addEventListener('submit', async (event) => {
 
 window.addEventListener('online', render);
 window.addEventListener('offline', render);
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=5').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=6').catch(() => {}));
 render();

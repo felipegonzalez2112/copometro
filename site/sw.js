@@ -1,5 +1,5 @@
-const CACHE = 'chinchin-shell-v5';
-const FILES = ['./', './index.html', './styles.css?v=5', './app.js?v=5', './manifest.webmanifest', './chinchin-icon.svg'];
+const CACHE = 'chinchin-shell-v6';
+const FILES = ['./', './index.html', './styles.css?v=6', './app.js?v=6', './manifest.webmanifest', './chinchin-icon.svg'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
 });
