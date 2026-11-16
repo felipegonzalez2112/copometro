@@ -78,10 +78,14 @@ function modal() {
   const isRating = screen.modal.type === 'rating';
   const existing = screen.modal.id ? drinks.find((drink) => drink.id === screen.modal.id) : null;
   const rating = isRating && existing ? (existing.ratings || []).find((item) => item.id === screen.modal.ratingId) : null;
-  const value = isRating ? rating || { score: 8, comments: '', tasted_at: new Date().toISOString().slice(0, 10), would_drink_again: true } : existing || { name: '', brand: '', category: 'Vinos', country: '', alcohol_percentage: '', image_url: '' };
-  return `<div class="modal-shade" data-action="close-shade"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><header class="modal-head"><div><span class="overline">MI COLECCIÓN</span><h2 id="modal-title">${isRating ? (rating ? 'Editar calificación' : 'Tu nota de cata') : (existing ? 'Editar bebida' : 'Nueva bebida')}</h2></div><button class="close" data-action="close-modal" aria-label="Cerrar">×</button></header>
+  const isNewDrink = !isRating && !existing;
+  const drinkValue = existing || { name: '', brand: '', category: 'Vinos', country: '', alcohol_percentage: '', image_url: '' };
+  const ratingValue = rating || { score: 8, comments: '', tasted_at: new Date().toISOString().slice(0, 10), would_drink_again: true };
+  const title = isRating ? (rating ? 'Editar bebida y cata' : 'Nueva cata') : (existing ? 'Editar bebida' : 'Registrar lo que probé');
+  return `<div class="modal-shade" data-action="close-shade"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><header class="modal-head"><div><span class="overline">MI BITÁCORA</span><h2 id="modal-title">${title}</h2></div><button class="close" data-action="close-modal" aria-label="Cerrar">×</button></header>
     <form id="entry-form" data-form="${isRating ? 'rating' : 'drink'}" data-id="${existing?.id || ''}" data-rating-id="${rating?.id || ''}">
-      ${isRating ? ratingFields(value) : drinkFields(value)}
+      <section class="form-section"><span class="form-section-title">LA BEBIDA</span>${drinkFields(drinkValue)}</section>
+      ${isRating || isNewDrink ? `<section class="form-section"><span class="form-section-title">${isNewDrink ? 'LO QUE PROBÉ' : 'MI CATA'}</span>${ratingFields(ratingValue)}</section>` : ''}
       <div class="form-actions"><button type="button" class="button secondary" data-action="close-modal">Cancelar</button><button class="button primary" type="submit">Guardar</button></div>
     </form></section></div>`;
 }
@@ -168,12 +172,19 @@ app.addEventListener('submit', async (event) => {
     const existing = id ? drinks.find((drink) => drink.id === id) : null;
     const drink = { id: existing?.id || crypto.randomUUID(), name: String(data.get('name')).trim(), brand: String(data.get('brand')).trim(), category: data.get('category'), country: existing?.country || '', alcohol_percentage: existing?.alcohol_percentage || '', image_url: data.get('image_url') || '', created_at: existing?.created_at || new Date().toISOString(), ratings: existing?.ratings || [] };
     if (!drink.name) return;
+    if (!existing && data.has('score') && data.has('tasted_at')) {
+      drink.ratings.unshift({ id: crypto.randomUUID(), score: Number(data.get('score')), comments: String(data.get('comments')).trim(), tasted_at: data.get('tasted_at'), would_drink_again: data.get('would_drink_again') === 'on', created_at: new Date().toISOString() });
+    }
     if (existing) drinks = drinks.map((item) => item.id === id ? drink : item); else drinks.unshift(drink);
-    if (persist()) { screen.modal = null; screen.drinkId = drink.id; notify(existing ? 'Bebida actualizada' : 'Bebida agregada'); }
+    if (persist()) { screen.modal = null; screen.drinkId = drink.id; notify(existing ? 'Bebida actualizada' : 'Bebida y cata guardadas'); }
   } else {
-    const drink = drinks.find((item) => item.id === id); const ratingId = form.dataset.ratingId;
-    const rating = { id: ratingId || crypto.randomUUID(), score: Number(data.get('score')), comments: String(data.get('comments')).trim(), tasted_at: data.get('tasted_at'), would_drink_again: data.get('would_drink_again') === 'on', created_at: new Date().toISOString() };
+    const current = drinks.find((item) => item.id === id); const ratingId = form.dataset.ratingId;
+    const drink = { ...current, name: String(data.get('name')).trim(), brand: String(data.get('brand')).trim(), category: data.get('category'), image_url: data.get('image_url') || '', ratings: [...(current.ratings || [])] };
+    const oldRating = drink.ratings.find((item) => item.id === ratingId);
+    const rating = { id: ratingId || crypto.randomUUID(), score: Number(data.get('score')), comments: String(data.get('comments')).trim(), tasted_at: data.get('tasted_at'), would_drink_again: data.get('would_drink_again') === 'on', created_at: oldRating?.created_at || new Date().toISOString() };
+    if (!drink.name) return;
     if (ratingId) drink.ratings = drink.ratings.map((item) => item.id === ratingId ? { ...item, ...rating } : item); else drink.ratings.unshift(rating);
+    drinks = drinks.map((item) => item.id === id ? drink : item);
     if (persist()) { screen.modal = null; notify('Calificación guardada'); }
   }
   render();
@@ -181,5 +192,5 @@ app.addEventListener('submit', async (event) => {
 
 window.addEventListener('online', render);
 window.addEventListener('offline', render);
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=4').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=5').catch(() => {}));
 render();
