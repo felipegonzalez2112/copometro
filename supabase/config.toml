@@ -1,0 +1,5 @@
+project_id = "chinchin"
+
+[functions.search-products]
+verify_jwt = false
+entrypoint = "./functions/search-products/index.js"

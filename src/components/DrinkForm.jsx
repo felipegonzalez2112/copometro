@@ -18,7 +18,7 @@ export default function DrinkForm({ initial, onSave, onCancel }) {
   async function search(event) {
     event.preventDefault(); if (!query.trim()) return
     setSearching(true); setSearchError(''); setResults([])
-    try { setResults(await searchOpenFoodFacts(query.trim())) } catch { setSearchError('No se pudo conectar. Podés completar el formulario manualmente.') } finally { setSearching(false) }
+    try { setResults(await searchOpenFoodFacts(query.trim())) } catch (error) { setSearchError(error.message || 'No se pudo conectar. Podés completar el formulario manualmente.') } finally { setSearching(false) }
   }
   function choose(item) { setForm((prev) => ({ ...prev, ...item, image_file: null })); setPreview(item.image_url || ''); setResults([]); setQuery('') }
   function selectFile(file) { if (!file) return; set('image_file', file); set('image_url', ''); setPreview(URL.createObjectURL(file)) }
