@@ -1,0 +1,13 @@
+{
+  "name": "ChinChin — Mi colección",
+  "short_name": "ChinChin",
+  "description": "Tu colección personal de bebidas y notas de cata.",
+  "lang": "es-AR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#11100e",
+  "theme_color": "#11100e",
+  "icons": [{ "src": "./chinchin-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
