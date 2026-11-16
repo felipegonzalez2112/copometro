@@ -41,26 +41,39 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #f5f0e7; background: transparent; font-size: 16px; }
 .search input::placeholder { color: #898377; }
 .clear-search { border: 0; padding: 6px; background: transparent; color: var(--muted); font-size: 23px; }
-.filters { display: flex; gap: 9px; padding: 18px 0 19px; overflow-x: auto; scrollbar-width: none; }
+.filters { display: flex; gap: 8px; padding: 14px 0 10px; overflow-x: auto; scrollbar-width: none; }
 .filters::-webkit-scrollbar { display: none; }
-.filter { flex: 0 0 auto; min-height: 43px; padding: 0 16px; border: 1px solid #3b3831; border-radius: 24px; background: transparent; color: #b3ad9f; font-size: 14px; }
+.filter { flex: 0 0 auto; min-height: 40px; padding: 0 13px; display: flex; align-items: center; gap: 7px; border: 1px solid #3b3831; border-radius: 24px; background: transparent; color: #b3ad9f; font-size: 13px; }
+.filter small { color: inherit; opacity: .75; font-size: 10px; }
 .filter.active { border-color: #886b3d; background: #332a1c; color: var(--gold-light); }
+.collection-tools { display: flex; flex-direction: column; gap: 9px; margin-bottom: 11px; }
+.opinion-filters { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
+.opinion-filters::-webkit-scrollbar { display: none; }
+.opinion-filter { flex: 0 0 auto; min-height: 35px; padding: 0 12px; border: 1px solid transparent; border-radius: 22px; background: transparent; color: #9aa69f; font-size: 12px; }
+.opinion-filter.active { border-color: #45685c; background: #1e312c; color: #b8e2d5; }
+.opinion-filter.active[data-opinion="no"] { border-color: #744b4e; background: #362426; color: #e8c0c3; }
+.sort-control { align-self: flex-end; display: flex; align-items: center; gap: 8px; color: #929f98; font-size: 11px; }
+.sort-control select { min-height: 36px; padding: 0 30px 0 10px; border: 1px solid #394745; border-radius: 8px; background: #171e1f; color: #d7e0db; font-size: 12px; }
+.result-count { margin: 2px 0 8px; color: #84928b; font-size: 11px; }
 .drink-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .drink-card { min-width: 0; overflow: hidden; text-align: left; padding: 0; border: 1px solid #34312b; border-radius: 12px; background: var(--panel); transition: border-color .18s, transform .18s; }
 .drink-card:active { transform: scale(.985); }
 .drink-card:hover { border-color: #78603a; }
-.card-photo { position: relative; height: clamp(190px, 34vw, 300px); display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 50% 76%, #49402d 0, #28251f 39%, #1c1b18 76%); }
+.card-photo { position: relative; height: clamp(145px, 22vw, 220px); display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 50% 76%, #49402d 0, #28251f 39%, #1c1b18 76%); }
 .card-photo > img { width: 100%; height: 100%; padding: 15px; object-fit: contain; }
 .photo-category { position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); padding: 6px 9px; border: 1px solid #6b5737; border-radius: 20px; background: rgb(17 16 14 / 83%); color: #efd195; font-size: 11px; }
 .placeholder { display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #96876b; }
 .placeholder svg { width: 35px; height: 35px; }
 .placeholder span { font-size: 13px; }
-.card-copy { padding: 14px 15px 15px; }
+.card-copy { padding: 11px 12px 12px; }
 .card-copy h3 { margin: 0; color: #f0eadd; font: 500 clamp(17px, 2vw, 21px)/1.25 Georgia, serif; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .card-copy p { margin: 6px 0 0; overflow: hidden; color: #aaa295; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.card-rating { display: flex; min-height: 35px; align-items: center; gap: 6px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #312f29; color: #aaa294; font-size: 13px; }
+.card-rating { display: flex; min-height: 31px; align-items: center; gap: 5px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #312f29; color: #aaa294; font-size: 12px; }
 .card-rating svg { width: 17px; height: 17px; fill: var(--gold); stroke: var(--gold); }
-.card-rating strong { color: var(--gold-light); font-size: 17px; }
+.card-rating strong { color: var(--gold-light); font-size: 16px; }
+.card-opinion { margin-left: auto; padding: 4px 7px; border-radius: 20px; background: #263832; color: #b8e2d5; font-size: 10px; white-space: nowrap; }
+.card-opinion.would-skip { background: #39282a; color: #e5c0c3; }
+.tasting-count { display: block; margin-top: 2px; color: #83928b; font-size: 10px; }
 .not-rated { color: #aaa294; }
 .empty { min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 22px; border: 1px dashed #413c31; border-radius: 14px; text-align: center; }
 .empty-icon { width: 59px; height: 59px; display: grid; place-items: center; margin-bottom: 16px; border: 1px solid #635137; border-radius: 50%; color: var(--gold); }
@@ -150,17 +163,27 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .catalog-heading h1 { font-size: 31px; }
   .section-title h2 { font-size: 28px; }
   .search { height: 56px; margin-top: 19px; border-radius: 12px; }
-  .filters { margin-right: -18px; padding: 15px 0 17px; }
-  .filter { min-height: 44px; padding: 0 15px; font-size: 14px; }
+  .filters { margin-right: -18px; padding: 11px 0 8px; }
+  .filter { min-height: 38px; gap: 6px; padding: 0 11px; font-size: 12px; }
+  .filter small { font-size: 9px; }
+  .opinion-filters { margin-right: -18px; padding-right: 18px; }
+  .opinion-filter { min-height: 34px; padding: 0 10px; font-size: 11px; }
+  .collection-tools { gap: 6px; margin-bottom: 8px; }
+  .sort-control { min-height: 32px; }
+  .sort-control select { min-height: 34px; font-size: 11px; }
+  .result-count { margin-bottom: 7px; font-size: 10px; }
   .drink-grid { gap: 12px; }
-  .card-photo { height: clamp(205px, 54vw, 255px); }
+  .card-photo { height: clamp(155px, 38vw, 185px); }
   .card-photo > img { padding: 11px; }
   .photo-category { top: 9px; left: 9px; font-size: 10px; }
-  .card-copy { padding: 12px 12px 13px; }
-  .card-copy h3 { font-size: 18px; line-height: 1.23; }
-  .card-copy p { margin-top: 5px; font-size: 13px; }
-  .card-rating { gap: 5px; margin-top: 9px; padding-top: 9px; font-size: 12px; }
-  .card-rating strong { font-size: 17px; }
+  .card-copy { padding: 9px 10px 10px; }
+  .card-copy h3 { font-size: 16px; line-height: 1.22; }
+  .card-copy p { margin-top: 4px; font-size: 12px; }
+  .card-rating { gap: 4px; margin-top: 7px; padding-top: 7px; font-size: 11px; }
+  .card-rating svg { width: 15px; height: 15px; }
+  .card-rating strong { font-size: 15px; }
+  .card-opinion { padding: 4px 6px; font-size: 9px; }
+  .tasting-count { font-size: 9px; }
   .footer { padding-top: 25px; font-size: 9px; letter-spacing: .9px; }
   .detail { padding-top: 13px; padding-bottom: calc(35px + var(--safe-bottom)); }
   .back { min-height: 48px; font-size: 15px; }
@@ -201,7 +224,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 @media (max-width: 370px) {
   .home, .detail { width: calc(100% - 28px); }
   .catalog-heading h1 { font-size: 28px; }
-  .card-photo { height: 190px; }
+  .card-photo { height: 145px; }
   .card-copy { padding: 10px; }
   .card-copy h3 { font-size: 16px; }
   .detail-hero { grid-template-columns: 112px minmax(0, 1fr); gap: 13px; }
@@ -260,6 +283,10 @@ body { background: #101617; color: #edf2ef; }
 .category-pill:active { transform: scale(.97); }
 .form-section { display: flex; flex-direction: column; gap: 14px; padding: 15px; border: 1px solid #303b39; border-radius: 12px; background: #171e1f; }
 .form-section-title { color: #8bc5b4; font-size: 10px; font-weight: 700; letter-spacing: 1.6px; }
+.filter.type-wine.active, .photo-category.type-wine { border-color: #80505a; background: #39252b; color: #e9c4c7; }
+.filter.type-vodka.active, .photo-category.type-vodka { border-color: #456c8b; background: #1e303f; color: #c1dced; }
+.filter.type-aperitivo.active, .photo-category.type-aperitivo { border-color: #8c6535; background: #382b1d; color: #e8c891; }
+.filter.type-other.active, .photo-category.type-other { border-color: #596d66; background: #27332f; color: #c3d2ca; }
 
 :root[data-theme="light"] {
   color-scheme: light;
@@ -286,6 +313,19 @@ body { background: #101617; color: #edf2ef; }
 :root[data-theme="light"] .search input::placeholder { color: #7c8982; }
 :root[data-theme="light"] .filter { border-color: #d1ddd6; background: #f8faf8; color: #4e6158; }
 :root[data-theme="light"] .filter.active { border-color: #57917e; background: #e0eee7; color: #1b5d48; }
+:root[data-theme="light"] .filter.type-wine.active, :root[data-theme="light"] .photo-category.type-wine { border-color: #d6aeb3; background: #f5e7e8; color: #733b45; }
+:root[data-theme="light"] .filter.type-vodka.active, :root[data-theme="light"] .photo-category.type-vodka { border-color: #a8c4d7; background: #e5eff6; color: #315b78; }
+:root[data-theme="light"] .filter.type-aperitivo.active, :root[data-theme="light"] .photo-category.type-aperitivo { border-color: #dec59c; background: #f5eddf; color: #795426; }
+:root[data-theme="light"] .filter.type-other.active, :root[data-theme="light"] .photo-category.type-other { border-color: #c5d1ca; background: #e9efeb; color: #4a6559; }
+:root[data-theme="light"] .filter small { color: inherit; }
+:root[data-theme="light"] .opinion-filter { color: #65766d; }
+:root[data-theme="light"] .opinion-filter.active { border-color: #c4dacf; background: #e5f0e9; color: #28634f; }
+:root[data-theme="light"] .opinion-filter.active[data-opinion="no"] { border-color: #e1c4c1; background: #f7e9e7; color: #8e4943; }
+:root[data-theme="light"] .sort-control { color: #63746c; }
+:root[data-theme="light"] .sort-control select { border-color: #cfdbd4; background: #fff; color: #2b4539; }
+:root[data-theme="light"] .result-count, :root[data-theme="light"] .tasting-count { color: #6e7e75; }
+:root[data-theme="light"] .card-opinion { background: #e3f0e8; color: #28634f; }
+:root[data-theme="light"] .card-opinion.would-skip { background: #f6e8e6; color: #8e4943; }
 :root[data-theme="light"] .drink-card { border-color: #d6e0da; background: #fff; box-shadow: 0 3px 12px rgb(26 50 41 / 5%); }
 :root[data-theme="light"] .drink-card:hover { border-color: #6d9f8d; }
 :root[data-theme="light"] .card-photo { background: radial-gradient(ellipse at 50% 76%, #dce9e2 0, #eaf1ec 45%, #f5f8f5 82%); }

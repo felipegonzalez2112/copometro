@@ -14,7 +14,7 @@ const icons = {
 const app = document.querySelector('#app');
 let drinks = load();
 let themePreference = readThemePreference();
-let screen = { page: 'home', drinkId: null, modal: null, query: '', category: 'Todas', notice: '' };
+let screen = { page: 'home', drinkId: null, modal: null, query: '', category: 'Todas', opinion: 'all', sort: 'recent', notice: '' };
 
 function readThemePreference() {
   try {
@@ -53,6 +53,14 @@ function esc(value = '') { return String(value).replace(/[&<>"']/g, (char) => ({
 function icon(name) { return icons[name] || ''; }
 function notify(message) { screen.notice = message; render(); setTimeout(() => { if (screen.notice === message) { screen.notice = ''; render(); } }, 2600); }
 function latest(drink) { return [...(drink.ratings || [])].sort((a, b) => b.tasted_at.localeCompare(a.tasted_at))[0]; }
+function averageScore(drink) {
+  const scores = (drink.ratings || []).map((rating) => Number(rating.score)).filter(Number.isFinite);
+  return scores.length ? scores.reduce((total, score) => total + score, 0) / scores.length : null;
+}
+function categoryClass(category) {
+  return ({ Vinos: 'type-wine', Gin: 'type-gin', Vodka: 'type-vodka', Aperitivos: 'type-aperitivo', Otros: 'type-other' })[category] || 'type-other';
+}
+function tastedAt(drink) { return latest(drink)?.tasted_at || drink.created_at || ''; }
 function dateLabel(value) { return value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
 function image(src, name, cls = '') {
   return src ? `<img class="${cls}" src="${esc(src)}" alt="${esc(name)}" loading="lazy">` : `<div class="placeholder ${cls}">${icon('bottle')}<span>Sin foto</span></div>`;
@@ -68,17 +76,36 @@ function render() {
 }
 
 function home() {
-  const shown = drinks.filter((drink) => (screen.category === 'Todas' || drink.category === screen.category) && `${drink.name} ${drink.brand || ''} ${drink.category}`.toLocaleLowerCase().includes(screen.query.toLocaleLowerCase()));
+  const categoryCounts = Object.fromEntries(CATEGORIES.map((category) => [category, drinks.filter((drink) => drink.category === category).length]));
+  const shown = drinks.filter((drink) => {
+    const rating = latest(drink);
+    const matchesOpinion = screen.opinion === 'all'
+      || (screen.opinion === 'yes' && rating?.would_drink_again === true)
+      || (screen.opinion === 'no' && rating?.would_drink_again === false)
+      || (screen.opinion === 'unrated' && !rating);
+    return (screen.category === 'Todas' || drink.category === screen.category)
+      && `${drink.name} ${drink.brand || ''} ${drink.category}`.toLocaleLowerCase().includes(screen.query.toLocaleLowerCase())
+      && matchesOpinion;
+  });
+  shown.sort((a, b) => {
+    if (screen.sort === 'high') return (averageScore(b) ?? -1) - (averageScore(a) ?? -1);
+    if (screen.sort === 'low') return (averageScore(a) ?? 11) - (averageScore(b) ?? 11);
+    return tastedAt(b).localeCompare(tastedAt(a));
+  });
   return `<main class="home"><section class="collection"><div class="catalog-heading"><div><span class="overline">${drinks.length} ${drinks.length === 1 ? 'BEBIDA' : 'BEBIDAS'}</span><h1>Mi colección</h1></div><button class="button primary desktop-add" data-action="add">${icon('plus')} Agregar</button></div>
       <label class="search">${icon('search')}<input id="search" type="search" placeholder="Buscar una bebida" value="${esc(screen.query)}" autocomplete="off">${screen.query ? '<button data-action="clear-search" class="clear-search" aria-label="Limpiar">×</button>' : ''}</label>
-      <div class="filters" aria-label="Filtrar por categoría">${['Todas', ...CATEGORIES].map((category) => `<button class="filter ${screen.category === category ? 'active' : ''}" data-category="${esc(category)}">${esc(category)}</button>`).join('')}</div>
-      ${shown.length ? `<div class="drink-grid">${shown.map(card).join('')}</div>` : `<div class="empty"><div class="empty-icon">${icon('bottle')}</div><h3>${drinks.length ? 'No encontré esa bebida' : 'Empezá tu colección'}</h3><p>${drinks.length ? 'Probá con otro nombre o categoría.' : 'Agregá una botella para guardar lo que te gustó.'}</p>${!drinks.length ? '<button class="button primary" data-action="add">Agregar bebida</button>' : ''}</div>`}
+      <div class="filters" aria-label="Filtrar por tipo"><button class="filter ${screen.category === 'Todas' ? 'active' : ''}" data-category="Todas">Todas <small>${drinks.length}</small></button>${CATEGORIES.map((category) => `<button class="filter ${categoryClass(category)} ${screen.category === category ? 'active' : ''}" data-category="${esc(category)}">${esc(category)} <small>${categoryCounts[category]}</small></button>`).join('')}</div>
+      <div class="collection-tools"><div class="opinion-filters" aria-label="Filtrar por opinión"><button class="opinion-filter ${screen.opinion === 'all' ? 'active' : ''}" data-opinion="all">Todas</button><button class="opinion-filter ${screen.opinion === 'yes' ? 'active' : ''}" data-opinion="yes">Volvería</button><button class="opinion-filter ${screen.opinion === 'no' ? 'active' : ''}" data-opinion="no">No repetiría</button><button class="opinion-filter ${screen.opinion === 'unrated' ? 'active' : ''}" data-opinion="unrated">Sin nota</button></div><label class="sort-control"><span>Ordenar</span><select id="sort-select"><option value="recent" ${screen.sort === 'recent' ? 'selected' : ''}>Última cata</option><option value="high" ${screen.sort === 'high' ? 'selected' : ''}>Mejor puntuadas</option><option value="low" ${screen.sort === 'low' ? 'selected' : ''}>Menor puntuación</option></select></label></div>
+      ${shown.length ? `<div class="result-count">${shown.length} ${shown.length === 1 ? 'botella' : 'botellas'}</div><div class="drink-grid">${shown.map(card).join('')}</div>` : `<div class="empty"><div class="empty-icon">${icon('bottle')}</div><h3>${drinks.length ? 'No hay botellas con estos filtros' : 'Empezá tu colección'}</h3><p>${drinks.length ? 'Probá otra categoría, opinión o búsqueda.' : 'Agregá una botella y contá qué te pareció.'}</p>${!drinks.length ? '<button class="button primary" data-action="add">Registrar lo que probé</button>' : ''}</div>`}
     </section></main>`;
 }
 
 function card(drink) {
   const rating = latest(drink);
-  return `<button class="drink-card" data-open="${drink.id}" aria-label="Ver ${esc(drink.name)}"><div class="card-photo">${image(drink.image_url, drink.name)}<span class="photo-category">${esc(drink.category)}</span></div><div class="card-copy"><h3>${esc(drink.name)}</h3><p>${esc(drink.brand || 'Marca sin especificar')}</p><div class="card-rating">${rating ? `${icon('star')}<strong>${Number(rating.score).toFixed(1)}</strong><span>/ 10</span>` : '<span class="not-rated">Todavía sin calificar</span>'}</div></div></button>`;
+  const average = averageScore(drink);
+  const ratingCount = (drink.ratings || []).length;
+  const opinion = rating ? (rating.would_drink_again ? 'Volvería' : 'No repetiría') : 'Sin opinión';
+  return `<button class="drink-card" data-open="${drink.id}" aria-label="Ver ${esc(drink.name)}"><div class="card-photo">${image(drink.image_url, drink.name)}<span class="photo-category ${categoryClass(drink.category)}">${esc(drink.category)}</span></div><div class="card-copy"><h3>${esc(drink.name)}</h3><p>${esc(drink.brand || 'Marca sin especificar')}</p><div class="card-rating">${average !== null ? `${icon('star')}<strong>${average.toFixed(1)}</strong><span>/ 10</span><span class="card-opinion ${rating?.would_drink_again ? 'would-repeat' : rating ? 'would-skip' : ''}">${opinion}</span>` : '<span class="not-rated">Sin opinión todavía</span>'}</div>${ratingCount > 1 ? `<span class="tasting-count">${ratingCount} catas · promedio</span>` : ''}</div></button>`;
 }
 
 function detail(drink) {
@@ -131,10 +158,11 @@ async function compress(file) {
 }
 
 app.addEventListener('click', async (event) => {
-  const target = event.target.closest('[data-action], [data-open], [data-category], [data-drink-category], [data-rating-edit], [data-rating-delete]');
+  const target = event.target.closest('[data-action], [data-open], [data-category], [data-opinion], [data-drink-category], [data-rating-edit], [data-rating-delete]');
   if (!target) return;
   if (target.dataset.open) { screen.drinkId = target.dataset.open; render(); return; }
   if (target.dataset.category) { screen.category = target.dataset.category; render(); return; }
+  if (target.dataset.opinion) { screen.opinion = target.dataset.opinion; render(); return; }
   if (target.dataset.drinkCategory) {
     const form = target.closest('form');
     form.querySelector('[name="category"]').value = target.dataset.drinkCategory;
@@ -176,6 +204,7 @@ app.addEventListener('change', async (event) => {
     try { localStorage.setItem(THEME_KEY, themePreference); } catch {}
     applyTheme(); render(); return;
   }
+  if (event.target.id === 'sort-select') { screen.sort = event.target.value; render(); return; }
   if (event.target.name !== 'image_file') return;
   const file = event.target.files?.[0]; if (!file) return;
   if (!file.type.startsWith('image/')) { notify('Elegí un archivo de imagen.'); return; }
@@ -214,5 +243,5 @@ app.addEventListener('submit', async (event) => {
 window.addEventListener('online', render);
 window.addEventListener('offline', render);
 matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => { if (themePreference === 'system') applyTheme(); });
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=7').catch(() => {}));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=8').catch(() => {}));
 render();
