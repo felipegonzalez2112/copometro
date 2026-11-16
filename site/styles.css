@@ -249,3 +249,9 @@ body { background: #101617; color: #edf2ef; }
 .field input, .field select, .field textarea, .again-choice { border-color: #3d4a47; background-color: #121819; }
 .again-choice input, .score-field input { accent-color: #79b9a8; }
 .toast { border-color: #476960; background: #1c2c29; color: #d4eee5; }
+.category-field { min-width: 0; margin: 0; padding: 0; border: 0; }
+.category-field legend { margin-bottom: 9px; color: #d4cbbb; font-size: 14px; }
+.category-pills { display: flex; flex-wrap: wrap; gap: 9px; }
+.category-pill { min-height: 44px; padding: 0 16px; border: 1px solid #3d4a47; border-radius: 30px; background: #141a1a; color: #c0cbc6; font-size: 14px; }
+.category-pill.active { border-color: #6ba998; background: #244139; color: #c8eee1; box-shadow: inset 0 0 0 1px #6ba998; }
+.category-pill:active { transform: scale(.97); }

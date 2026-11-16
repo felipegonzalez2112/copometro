@@ -1,5 +1,5 @@
 const KEY = 'chinchin.collection.v1';
-const CATEGORIES = ['Vinos', 'Gin', 'Vodka', 'Aperitivos'];
+const CATEGORIES = ['Vinos', 'Gin', 'Vodka', 'Aperitivos', 'Otros'];
 const icons = {
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
@@ -87,11 +87,12 @@ function modal() {
 }
 
 function drinkFields(drink) {
+  const selectedCategory = CATEGORIES.includes(drink.category) ? drink.category : 'Otros';
   return `<div class="photo-select">${image(drink.image_url, drink.name || 'Vista previa')}<label class="button secondary">${icon('photo')} Elegir foto<input name="image_file" type="file" accept="image/*"></label><small>Una foto desde tu galería</small></div>
     <input type="hidden" name="image_url" value="${esc(drink.image_url || '')}">
     <label class="field">Nombre *<input name="name" value="${esc(drink.name)}" placeholder="Ej. Malbec Reserva" required maxlength="90"></label>
-    <div class="field-row"><label class="field">Marca<input name="brand" value="${esc(drink.brand || '')}" placeholder="Bodega o destilería"></label><label class="field">Categoría<select name="category">${CATEGORIES.map((category) => `<option ${drink.category === category ? 'selected' : ''}>${category}</option>`).join('')}</select></label></div>
-    <div class="field-row"><label class="field">País de origen<input name="country" value="${esc(drink.country || '')}" placeholder="Argentina"></label><label class="field">Graduación<input name="alcohol_percentage" type="number" min="0" max="100" step="0.1" value="${esc(drink.alcohol_percentage || '')}" placeholder="13.5"><span class="suffix">%</span></label></div>`;
+    <label class="field">Marca<input name="brand" value="${esc(drink.brand || '')}" placeholder="Bodega o destilería"></label>
+    <fieldset class="category-field"><legend>Tipo</legend><input type="hidden" name="category" value="${esc(selectedCategory)}"><div class="category-pills" role="radiogroup" aria-label="Tipo de bebida">${CATEGORIES.map((category) => `<button type="button" class="category-pill ${selectedCategory === category ? 'active' : ''}" role="radio" aria-checked="${selectedCategory === category}" data-drink-category="${esc(category)}">${esc(category)}</button>`).join('')}</div></fieldset>`;
 }
 
 function ratingFields(rating) {
@@ -110,10 +111,18 @@ async function compress(file) {
 }
 
 app.addEventListener('click', async (event) => {
-  const target = event.target.closest('[data-action], [data-open], [data-category], [data-rating-edit], [data-rating-delete]');
+  const target = event.target.closest('[data-action], [data-open], [data-category], [data-drink-category], [data-rating-edit], [data-rating-delete]');
   if (!target) return;
   if (target.dataset.open) { screen.drinkId = target.dataset.open; render(); return; }
   if (target.dataset.category) { screen.category = target.dataset.category; render(); return; }
+  if (target.dataset.drinkCategory) {
+    const form = target.closest('form');
+    form.querySelector('[name="category"]').value = target.dataset.drinkCategory;
+    form.querySelectorAll('[data-drink-category]').forEach((pill) => {
+      const active = pill === target; pill.classList.toggle('active', active); pill.setAttribute('aria-checked', String(active));
+    });
+    return;
+  }
   if (target.dataset.ratingEdit || target.dataset.ratingDelete) {
     const drink = drinks.find((item) => item.id === screen.drinkId); const ratingId = target.dataset.ratingEdit || target.dataset.ratingDelete;
     if (target.dataset.ratingEdit) { screen.modal = { type: 'rating', id: drink.id, ratingId }; render(); }
@@ -157,7 +166,7 @@ app.addEventListener('submit', async (event) => {
   event.preventDefault(); const form = event.target; const data = new FormData(form); const id = form.dataset.id;
   if (form.dataset.form === 'drink') {
     const existing = id ? drinks.find((drink) => drink.id === id) : null;
-    const drink = { id: existing?.id || crypto.randomUUID(), name: String(data.get('name')).trim(), brand: String(data.get('brand')).trim(), category: data.get('category'), country: String(data.get('country')).trim(), alcohol_percentage: data.get('alcohol_percentage') || '', image_url: data.get('image_url') || '', created_at: existing?.created_at || new Date().toISOString(), ratings: existing?.ratings || [] };
+    const drink = { id: existing?.id || crypto.randomUUID(), name: String(data.get('name')).trim(), brand: String(data.get('brand')).trim(), category: data.get('category'), country: existing?.country || '', alcohol_percentage: existing?.alcohol_percentage || '', image_url: data.get('image_url') || '', created_at: existing?.created_at || new Date().toISOString(), ratings: existing?.ratings || [] };
     if (!drink.name) return;
     if (existing) drinks = drinks.map((item) => item.id === id ? drink : item); else drinks.unshift(drink);
     if (persist()) { screen.modal = null; screen.drinkId = drink.id; notify(existing ? 'Bebida actualizada' : 'Bebida agregada'); }
