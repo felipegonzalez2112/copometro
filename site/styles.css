@@ -27,15 +27,10 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .gold { color: var(--gold); }
 .local-mark { color: #928979; font-size: 10px; letter-spacing: 1.5px; }
 .home, .detail { width: min(100% - 52px, 1060px); margin: 0 auto; }
-.intro { min-height: 260px; padding: 50px 4px 35px; border-bottom: 1px solid #292721; position: relative; }
 .overline { display: block; color: #c19a5a; font-size: 11px; line-height: 1.4; font-weight: 700; letter-spacing: 1.8px; }
-.intro h1 { margin: 14px 0 12px; font: 500 clamp(44px, 6vw, 66px)/.98 Georgia, "Times New Roman", serif; letter-spacing: -2px; }
-.intro h1 em { color: var(--gold-light); }
-.intro p { color: var(--muted); margin: 0; font-size: 15px; }
-.collection-count { position: absolute; right: 5px; top: 72px; display: flex; align-items: center; gap: 12px; color: var(--muted); }
-.collection-count strong { font: 500 48px Georgia, serif; color: #ddc38e; }
-.collection-count span { max-width: 86px; font-size: 12px; line-height: 1.45; }
-.collection { padding-top: 34px; }
+.collection { padding-top: 36px; }
+.catalog-heading { display: flex; align-items: end; justify-content: space-between; }
+.catalog-heading h1 { margin: 5px 0 0; font: 500 36px/1.15 Georgia, serif; letter-spacing: -.7px; }
 .section-title { display: flex; align-items: center; justify-content: space-between; }
 .section-title h2 { margin: 5px 0 0; font: 500 30px/1.2 Georgia, serif; letter-spacing: -.5px; }
 .section-title small { display: inline-grid; place-items: center; min-width: 28px; height: 25px; margin-left: 4px; border-radius: 15px; background: #302a20; color: #dec58f; font: 600 13px ui-sans-serif, sans-serif; vertical-align: 3px; }
@@ -148,20 +143,15 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .local-mark { font-size: 9px; letter-spacing: 1px; }
   .home, .detail { width: calc(100% - 36px); }
   .home { padding-bottom: calc(82px + var(--safe-bottom)); }
-  .intro { min-height: 244px; padding: 34px 0 28px; }
-  .intro .overline, .section-title .overline { font-size: 10px; }
-  .intro h1 { margin: 13px 0; font-size: clamp(43px, 11vw, 53px); }
-  .intro p { max-width: 230px; font-size: 14px; line-height: 1.5; }
-  .collection-count { right: 0; top: 70px; gap: 8px; }
-  .collection-count strong { font-size: 40px; }
-  .collection-count span { max-width: 69px; font-size: 11px; }
-  .collection { padding-top: 26px; }
+  .section-title .overline, .catalog-heading .overline { font-size: 10px; }
+  .collection { padding-top: 23px; }
+  .catalog-heading h1 { font-size: 31px; }
   .section-title h2 { font-size: 28px; }
-  .search { height: 54px; margin-top: 19px; border-radius: 12px; }
+  .search { height: 56px; margin-top: 19px; border-radius: 12px; }
   .filters { margin-right: -18px; padding: 15px 0 17px; }
   .filter { min-height: 44px; padding: 0 15px; font-size: 14px; }
   .drink-grid { gap: 12px; }
-  .card-photo { height: clamp(190px, 52vw, 245px); }
+  .card-photo { height: clamp(205px, 54vw, 255px); }
   .card-photo > img { padding: 11px; }
   .photo-category { top: 9px; left: 9px; font-size: 10px; }
   .card-copy { padding: 12px 12px 13px; }
@@ -207,10 +197,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 @media (max-width: 370px) {
   .home, .detail { width: calc(100% - 28px); }
-  .intro h1 { font-size: 41px; }
-  .collection-count { top: 75px; }
-  .collection-count strong { font-size: 34px; }
-  .card-photo { height: 176px; }
+  .catalog-heading h1 { font-size: 28px; }
+  .card-photo { height: 190px; }
   .card-copy { padding: 10px; }
   .card-copy h3 { font-size: 16px; }
   .detail-hero { grid-template-columns: 112px minmax(0, 1fr); gap: 13px; }

@@ -53,12 +53,11 @@ function render() {
 
 function home() {
   const shown = drinks.filter((drink) => (screen.category === 'Todas' || drink.category === screen.category) && `${drink.name} ${drink.brand || ''} ${drink.category}`.toLocaleLowerCase().includes(screen.query.toLocaleLowerCase()));
-  return `<main class="home"><section class="intro"><span class="overline">MI BITÁCORA PERSONAL</span><h1>Un brindis<br><em>por descubrir.</em></h1><p>Tu colección, tus recuerdos, a tu ritmo.</p><div class="collection-count"><strong>${drinks.length}</strong><span>${drinks.length === 1 ? 'bebida guardada' : 'bebidas guardadas'}</span></div></section>
-    <section class="collection"><div class="section-title"><div><span class="overline">LA COLECCIÓN</span><h2>Mis bebidas</h2></div><button class="button primary desktop-add" data-action="add">${icon('plus')} Agregar</button></div>
-      <label class="search">${icon('search')}<input id="search" type="search" placeholder="Buscar en mi colección" value="${esc(screen.query)}" autocomplete="off">${screen.query ? '<button data-action="clear-search" class="clear-search" aria-label="Limpiar">×</button>' : ''}</label>
+  return `<main class="home"><section class="collection"><div class="catalog-heading"><div><span class="overline">${drinks.length} ${drinks.length === 1 ? 'BEBIDA' : 'BEBIDAS'}</span><h1>Mi colección</h1></div><button class="button primary desktop-add" data-action="add">${icon('plus')} Agregar</button></div>
+      <label class="search">${icon('search')}<input id="search" type="search" placeholder="Buscar una bebida" value="${esc(screen.query)}" autocomplete="off">${screen.query ? '<button data-action="clear-search" class="clear-search" aria-label="Limpiar">×</button>' : ''}</label>
       <div class="filters" aria-label="Filtrar por categoría">${['Todas', ...CATEGORIES].map((category) => `<button class="filter ${screen.category === category ? 'active' : ''}" data-category="${esc(category)}">${esc(category)}</button>`).join('')}</div>
       ${shown.length ? `<div class="drink-grid">${shown.map(card).join('')}</div>` : `<div class="empty"><div class="empty-icon">${icon('bottle')}</div><h3>${drinks.length ? 'No encontré esa bebida' : 'Empezá tu colección'}</h3><p>${drinks.length ? 'Probá con otro nombre o categoría.' : 'Agregá una botella para guardar lo que te gustó.'}</p>${!drinks.length ? '<button class="button primary" data-action="add">Agregar bebida</button>' : ''}</div>`}
-    </section><footer class="footer">GUARDADO EN ESTE CELULAR · DISPONIBLE SIN CONEXIÓN</footer></main>`;
+    </section></main>`;
 }
 
 function card(drink) {
