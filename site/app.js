@@ -1,4 +1,5 @@
 const KEY = 'chinchin.collection.v1';
+const THEME_KEY = 'chinchin.theme.v1';
 const CATEGORIES = ['Vinos', 'Gin', 'Vodka', 'Aperitivos', 'Otros'];
 const icons = {
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
@@ -12,7 +13,22 @@ const icons = {
 };
 const app = document.querySelector('#app');
 let drinks = load();
+let themePreference = readThemePreference();
 let screen = { page: 'home', drinkId: null, modal: null, query: '', category: 'Todas', notice: '' };
+
+function readThemePreference() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    return ['system', 'light', 'dark'].includes(saved) ? saved : 'system';
+  } catch { return 'system'; }
+}
+function applyTheme() {
+  const theme = themePreference === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : themePreference;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  document.querySelector('#theme-color')?.setAttribute('content', theme === 'light' ? '#f3f6f3' : '#101617');
+}
+applyTheme();
 
 function load() {
   try {
@@ -44,7 +60,7 @@ function image(src, name, cls = '') {
 
 function render() {
   const selected = drinks.find((drink) => drink.id === screen.drinkId);
-  app.innerHTML = `<header class="topbar"><button class="brand" data-action="home" aria-label="Ir al inicio"><span class="brand-mark">C</span><span>ChinChin<span class="gold">.</span></span></button><span class="local-mark">${navigator.onLine ? 'EN ESTE DISPOSITIVO' : 'SIN CONEXIÓN'}</span></header>
+  app.innerHTML = `<header class="topbar"><button class="brand" data-action="home" aria-label="Ir al inicio"><span class="brand-mark">C</span><span>ChinChin<span class="gold">.</span></span></button><label class="theme-picker"><span>Tema</span><select id="theme-select" aria-label="Apariencia de ChinChin"><option value="system" ${themePreference === 'system' ? 'selected' : ''}>Sistema</option><option value="light" ${themePreference === 'light' ? 'selected' : ''}>Claro</option><option value="dark" ${themePreference === 'dark' ? 'selected' : ''}>Oscuro</option></select></label></header>
     ${screen.notice ? `<div class="toast" role="status">${esc(screen.notice)}</div>` : ''}
     ${selected ? detail(selected) : home()}
     ${screen.modal ? modal() : ''}
@@ -155,6 +171,11 @@ app.addEventListener('input', (event) => {
 });
 
 app.addEventListener('change', async (event) => {
+  if (event.target.id === 'theme-select') {
+    themePreference = event.target.value;
+    try { localStorage.setItem(THEME_KEY, themePreference); } catch {}
+    applyTheme(); render(); return;
+  }
   if (event.target.name !== 'image_file') return;
   const file = event.target.files?.[0]; if (!file) return;
   if (!file.type.startsWith('image/')) { notify('Elegí un archivo de imagen.'); return; }
@@ -192,5 +213,6 @@ app.addEventListener('submit', async (event) => {
 
 window.addEventListener('online', render);
 window.addEventListener('offline', render);
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=6').catch(() => {}));
+matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => { if (themePreference === 'system') applyTheme(); });
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=7').catch(() => {}));
 render();

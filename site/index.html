@@ -3,16 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#101617" />
+    <meta name="theme-color" id="theme-color" content="#101617" />
     <meta name="description" content="Tu colección personal de bebidas y notas de cata." />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./chinchin-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./chinchin-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=6" />
+    <script>
+      try {
+        const preference = localStorage.getItem('chinchin.theme.v1');
+        const resolved = preference === 'light' || preference === 'dark' ? preference : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.style.colorScheme = resolved;
+        document.querySelector('#theme-color')?.setAttribute('content', resolved === 'light' ? '#f3f6f3' : '#101617');
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="./styles.css?v=7" />
     <title>ChinChin — Mi colección</title>
   </head>
   <body>
     <div id="app"></div>
-    <script src="./app.js?v=6" defer></script>
+    <script src="./app.js?v=7" defer></script>
   </body>
 </html>

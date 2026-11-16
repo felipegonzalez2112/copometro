@@ -17,6 +17,7 @@ Abrí `http://localhost:5173`. Para probar la instalación y el modo sin conexi�
 - Agregá bebidas manualmente y elegí una foto de la galería.
 - Guardá, editá o eliminá las calificaciones desde el detalle.
 - La colección se guarda en el almacenamiento local del navegador de ese dispositivo.
+- El tema sigue la apariencia del sistema por defecto; también podés elegir claro u oscuro manualmente.
 - Las fotos se reducen antes de guardarse. Si el navegador se queda sin espacio, mostrará un aviso.
 - No hay sincronización entre dispositivos ni búsqueda externa de productos.
 - La PWA guarda sus archivos para abrir la aplicación sin conexión. Los datos quedan en el propio navegador.
