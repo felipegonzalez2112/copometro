@@ -38,6 +38,9 @@ const INGREDIENT_CATALOG = {
   ]
 };
 
+const COMMON_DRINKS = ['Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila'];
+const COMMON_INGREDIENTS = ['Tónica', 'Soda', 'Coca-Cola', 'Lima', 'Limón', 'Naranja', 'Menta', 'Almíbar / Azúcar'];
+
 // Aliases para la taxonomía de la API de 24cocktails
 const INGREDIENT_ALIASES = {
   'ron': 'rum,white_rum',
@@ -203,8 +206,6 @@ let favorites = loadFavorites();
 
 // Navegación principal
 let activeMainView = 'search'; // 'search' | 'favorites'
-let activeIngredientGroup = 'bebidas';
-let activeCategoryTab = 'espirituosas';
 
 let searchState = {
   status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
@@ -711,10 +712,28 @@ function render() {
 }
 
 function renderHome() {
-  const activeCategory = INGREDIENT_CATEGORIES.find((cat) => cat.id === activeCategoryTab)
-    || INGREDIENT_CATEGORIES[0];
-  const currentCategoryItems = INGREDIENT_CATALOG[activeCategory.id] || [];
   const isChangedSinceSearch = searchState.status === 'success' && searchState.searchedKey !== selectedIngredients.slice().sort().join(',').toLowerCase();
+  const renderPickerChip = (item) => {
+    const isSelected = selectedIngredients.some((selected) => selected.toLowerCase() === item.toLowerCase());
+    return `
+      <button type="button" class="frequent-chip ${isSelected ? 'selected' : ''}"
+        data-toggle-frequent="${esc(item)}" aria-pressed="${isSelected}">
+        <span class="chip-icon">${isSelected ? '✓' : '+'}</span><span>${esc(item)}</span>
+      </button>
+    `;
+  };
+  const renderMoreCatalog = (group, commonItems) => {
+    const common = new Set(commonItems.map((item) => item.toLowerCase()));
+    return INGREDIENT_CATEGORIES.filter((cat) => cat.group === group).map((cat) => {
+      const remainingItems = (INGREDIENT_CATALOG[cat.id] || []).filter((item) => !common.has(item.toLowerCase()));
+      return remainingItems.length ? `
+        <section class="catalog-subgroup">
+          <h4>${esc(cat.label.replace(/^[^ ]+ /, ''))}</h4>
+          <div class="frequent-wrap">${remainingItems.map(renderPickerChip).join('')}</div>
+        </section>
+      ` : '';
+    }).join('');
+  };
 
   return `
     <main class="home">
@@ -759,61 +778,31 @@ function renderHome() {
           </button>
         </form>
 
-        <!-- Selector separado entre bebidas y otros ingredientes -->
-        <div class="category-tabs-container">
-          <div class="ingredient-group-tabs" role="tablist" aria-label="Tipo de producto">
-            <button type="button" class="ingredient-group-tab ${activeIngredientGroup === 'bebidas' ? 'active' : ''}"
-              role="tab" aria-selected="${activeIngredientGroup === 'bebidas'}" data-select-ingredient-group="bebidas">
-              <span class="group-tab-icon">${icon('bottle')}</span>
-              <span><strong>Bebidas</strong><small>Gin, vodka, ron...</small></span>
-            </button>
-            <button type="button" class="ingredient-group-tab ${activeIngredientGroup === 'ingredientes' ? 'active' : ''}"
-              role="tab" aria-selected="${activeIngredientGroup === 'ingredientes'}" data-select-ingredient-group="ingredientes">
-              <span class="group-tab-icon">${icon('sparkles')}</span>
-              <span><strong>Ingredientes</strong><small>Frutas, mezcladores...</small></span>
-            </button>
-          </div>
-          <div class="ingredient-group-panel" role="tabpanel">
-            <div class="ingredient-group-heading">
-              <div>
-                <h2>${activeIngredientGroup === 'bebidas' ? '¿Qué bebidas tenés?' : '¿Qué más hay en tu cocina?'}</h2>
-                <p>${activeIngredientGroup === 'bebidas' ? 'Elegí tus destilados, licores y aperitivos.' : 'Sumá mezcladores, frutas y básicos para completar tu barra.'}</p>
-              </div>
+        <!-- Selección rápida, con los productos más usados a la vista -->
+        <div class="quick-picks">
+          <section class="quick-pick-section" aria-labelledby="common-drinks-title">
+            <div class="quick-pick-heading">
+              <span class="quick-pick-icon">${icon('bottle')}</span>
+              <div><h2 id="common-drinks-title">Bebidas</h2><p>Los clásicos de la barra</p></div>
             </div>
-            <div class="category-tabs" role="tablist" aria-label="Subcategorías">
-            ${INGREDIENT_CATEGORIES.filter((cat) => cat.group === activeIngredientGroup).map((cat) => `
-              <button
-                type="button"
-                class="category-tab ${activeCategoryTab === cat.id ? 'active' : ''}"
-                role="tab"
-                aria-selected="${activeCategoryTab === cat.id}"
-                data-select-category="${cat.id}"
-              >
-                ${esc(cat.label)}
-              </button>
-            `).join('')}
-            </div>
+            <div class="frequent-wrap">${COMMON_DRINKS.map(renderPickerChip).join('')}</div>
+            <details class="more-catalog">
+              <summary>Ver todas las bebidas</summary>
+              <div class="more-catalog-content">${renderMoreCatalog('bebidas', COMMON_DRINKS)}</div>
+            </details>
+          </section>
 
-          <!-- Chips de la categoría activa -->
-          <div class="frequent-wrap" role="group" aria-label="${esc(activeCategory.label.replace(/^[^ ]+ /, ''))}">
-            ${currentCategoryItems.map((item) => {
-              const isSelected = selectedIngredients.some(
-                (selected) => selected.toLowerCase() === item.toLowerCase()
-              );
-              return `
-                <button
-                  type="button"
-                  class="frequent-chip ${isSelected ? 'selected' : ''}"
-                  data-toggle-frequent="${esc(item)}"
-                  aria-pressed="${isSelected}"
-                >
-                  <span class="chip-icon">${isSelected ? '✓' : '+'}</span>
-                  <span>${esc(item)}</span>
-                </button>
-              `;
-            }).join('')}
-          </div>
-          </div>
+          <section class="quick-pick-section" aria-labelledby="common-ingredients-title">
+            <div class="quick-pick-heading">
+              <span class="quick-pick-icon">${icon('sparkles')}</span>
+              <div><h2 id="common-ingredients-title">Ingredientes</h2><p>Mezcladores, frutas y básicos</p></div>
+            </div>
+            <div class="frequent-wrap">${COMMON_INGREDIENTS.map(renderPickerChip).join('')}</div>
+            <details class="more-catalog">
+              <summary>Ver todos los ingredientes</summary>
+              <div class="more-catalog-content">${renderMoreCatalog('ingredientes', COMMON_INGREDIENTS)}</div>
+            </details>
+          </section>
         </div>
 
         <!-- Ingredientes Seleccionados (Etiquetas) -->
@@ -1707,26 +1696,6 @@ app.addEventListener('click', (event) => {
     addIngredient(autocompleteTarget.dataset.autocompleteAdd);
     const input = document.querySelector('#ingredient-input');
     if (input) input.value = '';
-    return;
-  }
-
-  // Cambiar entre bebidas e ingredientes
-  const ingredientGroupTab = event.target.closest('[data-select-ingredient-group]');
-  if (ingredientGroupTab) {
-    activeIngredientGroup = ingredientGroupTab.dataset.selectIngredientGroup;
-    const groupCategories = INGREDIENT_CATEGORIES.filter((cat) => cat.group === activeIngredientGroup);
-    if (!groupCategories.some((cat) => cat.id === activeCategoryTab)) {
-      activeCategoryTab = groupCategories[0]?.id || INGREDIENT_CATEGORIES[0].id;
-    }
-    render();
-    return;
-  }
-
-  // Click en pestaña de subcategoría
-  const catTab = event.target.closest('[data-select-category]');
-  if (catTab) {
-    activeCategoryTab = catTab.dataset.selectCategory;
-    render();
     return;
   }
 
