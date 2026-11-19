@@ -241,7 +241,7 @@ let notice = '';
 function readThemePreference() {
   try {
     const saved = localStorage.getItem(THEME_KEY);
-    return ['system', 'light', 'dark'].includes(saved) ? saved : 'system';
+    return ['system', 'light', 'dark'].includes(saved) ? saved : 'light';
   } catch {
     return 'system';
   }
@@ -253,7 +253,7 @@ function applyTheme() {
     : themePreference;
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
-  document.querySelector('#theme-color')?.setAttribute('content', theme === 'light' ? '#f3f6f3' : '#101617');
+  document.querySelector('#theme-color')?.setAttribute('content', theme === 'light' ? '#f8f5f0' : '#171412');
 }
 applyTheme();
 
@@ -334,6 +334,125 @@ function buildHaveQuery(ingredients) {
   return Array.from(tokens).join(',');
 }
 
+function normalizeIngredientText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function ingredientAliasesFor(value) {
+  const normalized = normalizeIngredientText(value);
+  const aliasEntry = Object.entries(INGREDIENT_ALIASES).find(([name]) => normalizeIngredientText(name) === normalized);
+  return aliasEntry ? aliasEntry[1].split(',').map(normalizeIngredientText) : [];
+}
+
+function ingredientIsAvailable(ingredient) {
+  const name = typeof ingredient === 'string' ? ingredient : (ingredient?.name || ingredient?.key || '');
+  const recipeName = normalizeIngredientText(name);
+  if (!recipeName) return true;
+
+  // "Vermouth" genérico en la API puede corresponder a seco o dulce en la barra.
+  if (recipeName === 'vermouth' || recipeName === 'vermut') {
+    return selectedIngredients.some((item) => /\b(vermouth|vermut)\b/.test(normalizeIngredientText(item)));
+  }
+
+  return selectedIngredients.some((selected) => {
+    const selectedName = normalizeIngredientText(selected);
+    const candidates = [selectedName, ...ingredientAliasesFor(selected)];
+    return candidates.some((candidate) => candidate && (` ${recipeName} `).includes(` ${candidate.replace(/_/g, ' ')} `));
+  });
+}
+
+function ingredientIsExplicitlyMissing(ingredient, drink) {
+  if (!drink?.missing) return false;
+  const ingredientName = normalizeIngredientText(typeof ingredient === 'string' ? ingredient : ingredient?.name);
+  const ingredientKey = normalizeIngredientText(typeof ingredient === 'object' ? ingredient?.key : '');
+  const missingName = normalizeIngredientText(drink.missing.name);
+  const missingKey = normalizeIngredientText(drink.missing.key);
+  return Boolean(
+    (missingKey && (ingredientKey === missingKey || ingredientName === missingKey)) ||
+    (missingName && (` ${ingredientName} `).includes(` ${missingName} `))
+  );
+}
+
+function getRecipeMissingIngredients(recipe) {
+  const ingredients = Array.isArray(recipe?.ingredients) ? recipe.ingredients : [];
+  return ingredients.filter((ingredient) => {
+    if (ingredient && typeof ingredient === 'object' && ingredient.optional) return false;
+    return !ingredientIsAvailable(ingredient);
+  });
+}
+
+async function verifySearchResults(data, signal) {
+  // Solo pedimos fichas completas para los "listos": el resumen de la API puede omitir ingredientes obligatorios.
+  const unique = Array.from(new Map((data.can_make?.results || []).map((drink) => [drink.slug, drink])).values());
+  const results = await Promise.all(unique.map(async (summary) => {
+    try {
+      let recipe = recipeCache.get(summary.slug);
+      if (!recipe) {
+        const response = await fetch(`${API_BASE}/recipe/${encodeURIComponent(summary.slug)}?lang=es`, { signal });
+        if (!response.ok) throw new Error(`Respuesta del servidor: ${response.status}`);
+        recipe = await response.json();
+        recipeCache.set(summary.slug, recipe);
+      }
+      const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+      if (!ingredients.length) throw new Error('La receta no trae ingredientes completos');
+      const missingIngredients = getRecipeMissingIngredients(recipe);
+      return {
+        ...summary,
+        ingredients,
+        verified: true,
+        missingIngredients,
+        missing: missingIngredients.length ? { name: missingIngredients[0].name || missingIngredients[0] } : null
+      };
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      return { ...summary, verified: false, verificationError: true, missingIngredients: [] };
+    }
+  }));
+
+  const verifiedCanMake = [];
+  const needsIngredients = [];
+  const unverified = [];
+  for (const drink of results) {
+    if (!drink.verified) {
+      unverified.push(drink);
+    } else if (drink.missingIngredients.length) {
+      needsIngredients.push(drink);
+    } else {
+      verifiedCanMake.push(drink);
+    }
+  }
+
+  const apiOneAway = (data.one_away?.results || []).map((summary) => {
+    const missingName = summary.missing?.name || '';
+    const ingredients = [...(summary.ingredients || [])];
+    if (missingName && !ingredients.some((ingredient) => (` ${normalizeIngredientText(ingredient)} `).includes(` ${normalizeIngredientText(missingName)} `))) {
+      ingredients.push(missingName);
+    }
+    const detectedMissing = getRecipeMissingIngredients({ ingredients });
+    const missingIngredients = missingName
+      ? [missingName]
+      : detectedMissing.map((ingredient) => typeof ingredient === 'string' ? ingredient : ingredient.name).filter(Boolean);
+    return {
+      ...summary,
+      ingredients,
+      verified: true,
+      missingIngredients,
+      missing: summary.missing || (missingIngredients.length ? { name: missingIngredients[0] } : null)
+    };
+  });
+
+  return {
+    ...data,
+    can_make: { ...data.can_make, results: verifiedCanMake, total: verifiedCanMake.length },
+    one_away: { ...data.one_away, results: [...needsIngredients, ...apiOneAway, ...unverified], total: needsIngredients.length + apiOneAway.length + unverified.length }
+  };
+}
+
 // ----------------------------------------------------
 // ANÁLISIS DE INGREDIENTES (Tengo vs Me falta, priorizando los que tengo)
 // ----------------------------------------------------
@@ -341,37 +460,13 @@ function buildHaveQuery(ingredients) {
 function analyzeDrinkIngredients(drink) {
   const ingredients = Array.isArray(drink.ingredients) ? drink.ingredients : [];
   if (!ingredients.length) return [];
-
-  // Si tiene 'missing', sabemos exactamente qué ingrediente falta
-  const missingName = (drink.missing?.name || '').toLowerCase();
-  const missingKey = (drink.missing?.key || '').toLowerCase();
-
-  const analyzed = ingredients.map((ing) => {
-    const lower = ing.toLowerCase();
-    let isMissing = false;
-
-    if (drink.missing) {
-      if (missingKey && lower.includes(missingKey)) {
-        isMissing = true;
-      } else if (missingName && (missingName.includes(lower) || lower.includes(missingName))) {
-        isMissing = true;
-      } else if (missingKey === 'cola' && lower.includes('coca')) {
-        isMissing = true;
-      } else if (missingKey === 'tonic' && lower.includes('tónica')) {
-        isMissing = true;
-      }
-    } else if (!searchState.data?.can_make?.results?.some((d) => d.slug === drink.slug)) {
-      // Si estamos verificando un favorito guardado y no viene de can_make
-      const hasMatch = selectedIngredients.some((sel) => {
-        const selLow = sel.toLowerCase();
-        return lower.includes(selLow) || selLow.includes(lower);
-      });
-      isMissing = !hasMatch;
-    }
-
+  const analyzed = ingredients
+    .filter((ingredient) => !(ingredient && typeof ingredient === 'object' && ingredient.optional))
+    .map((ingredient) => {
+    const name = typeof ingredient === 'string' ? ingredient : (ingredient?.name || ingredient?.key || '');
     return {
-      name: ing,
-      owned: !isMissing
+      name,
+      owned: !ingredientIsExplicitlyMissing(ingredient, drink) && ingredientIsAvailable(ingredient)
     };
   });
 
@@ -495,10 +590,12 @@ async function searchCocktails(keepTab = false) {
     if (!res.ok) {
       throw new Error(`Respuesta del servidor: ${res.status}`);
     }
-    const data = await res.json();
+    let data = await res.json();
     if (!data || !data.can_make || !data.one_away) {
       throw new Error('Estructura de respuesta inesperada');
     }
+
+    data = await verifySearchResults(data, activeSearchAbort.signal);
 
     searchCache.set(cacheKey, data);
     updateDrinksMap(data);
@@ -639,9 +736,9 @@ function filterDrinksList(drinks) {
       }
     }
 
-    if (filterMissing !== 'all' && drink.missing) {
-      const missingName = drink.missing.name || '';
-      if (missingName !== filterMissing) {
+    if (filterMissing !== 'all') {
+      const missingNames = (drink.missingIngredients || []).map((item) => typeof item === 'string' ? item : item.name);
+      if (!missingNames.includes(filterMissing) && drink.missing?.name !== filterMissing) {
         return false;
       }
     }
@@ -906,8 +1003,9 @@ function renderResultsState() {
 
     const missingCounts = {};
     for (const d of rawOneAway) {
-      const name = d.missing?.name || 'Otro';
-      missingCounts[name] = (missingCounts[name] || 0) + 1;
+      const names = d.missingIngredients?.map((item) => typeof item === 'string' ? item : item.name).filter(Boolean)
+        || (d.missing?.name ? [d.missing.name] : []);
+      names.forEach((name) => { missingCounts[name] = (missingCounts[name] || 0) + 1; });
     }
     const sortedMissing = Object.entries(missingCounts).sort((a, b) => b[1] - a[1]);
 
@@ -919,22 +1017,22 @@ function renderResultsState() {
       <nav class="results-tabs" role="tablist" aria-label="Tipos de resultados">
         <button
           type="button"
-          class="results-tab ${resultsActiveTab === 'can_make' ? 'active' : ''}"
+          class="results-tab ready-tab ${resultsActiveTab === 'can_make' ? 'active' : ''}"
           role="tab"
           aria-selected="${resultsActiveTab === 'can_make'}"
           data-results-tab="can_make"
         >
-          <span>Podés preparar</span>
+          <span>✓ Podés preparar</span>
           <small>${rawCanMake.length}</small>
         </button>
         <button
           type="button"
-          class="results-tab ${resultsActiveTab === 'one_away' ? 'active' : ''}"
+          class="results-tab missing-tab ${resultsActiveTab === 'one_away' ? 'active' : ''}"
           role="tab"
           aria-selected="${resultsActiveTab === 'one_away'}"
           data-results-tab="one_away"
         >
-          <span>Te falta 1 ingrediente</span>
+          <span>✕ Aún no podés preparar</span>
           <small>${rawOneAway.length}</small>
         </button>
       </nav>
@@ -986,7 +1084,7 @@ function renderResultsState() {
         ` : `
           <div class="empty">
             <p style="margin:0; color:var(--muted);">
-              ${rawCanMake.length ? 'Ningún trago coincide con los filtros aplicados.' : 'No encontramos cócteles que puedas preparar con exactamente estos ingredientes. ¡Revisá la pestaña "Te falta 1 ingrediente" para ver cuáles podés desbloquear!'}
+              ${rawCanMake.length ? 'Ningún trago coincide con los filtros aplicados.' : 'No encontramos cócteles que puedas preparar con estos ingredientes. Revisá “Aún no podés preparar” para ver qué te falta.'}
             </p>
           </div>
         `}
@@ -1043,7 +1141,7 @@ function renderCanMakeCard(drink) {
 
   return `
     <article
-      class="drink-card"
+      class="drink-card ready-card"
       data-open-slug="${esc(drink.slug)}"
       role="button"
       tabindex="0"
@@ -1089,6 +1187,7 @@ function renderCanMakeCard(drink) {
       </div>
 
       <div class="card-copy">
+        <div class="card-readiness is-ready"><span aria-hidden="true">✓</span> Podés prepararlo ahora</div>
         <h3>${esc(drink.name)}</h3>
 
         <!-- Lista visual de ingredientes: priorizando los que tengo -->
@@ -1117,17 +1216,19 @@ function renderCanMakeCard(drink) {
 function renderOneAwayCard(drink) {
   const photoUrl = drink.photo || '';
   const prep = drink.prep_minutes ? `${drink.prep_minutes} min` : null;
-  const missingName = drink.missing?.name || '1 ingrediente';
+  const missingNames = (drink.missingIngredients || []).map((item) => typeof item === 'string' ? item : item.name).filter(Boolean);
+  const missingName = drink.missing?.name || missingNames[0] || 'un ingrediente';
+  const missingCountLabel = missingNames.length === 1 ? 'Falta 1 ingrediente' : `Faltan ${missingNames.length || 1} ingredientes`;
   const isFav = isFavorite(drink.slug);
 
   // Analizar ingredientes: priorizar los que tengo
-  const analyzed = analyzeDrinkIngredients(drink);
+  const analyzed = drink.verified ? analyzeDrinkIngredients(drink) : [];
   const total = analyzed.length;
   const owned = analyzed.filter((i) => i.owned).length;
 
   return `
     <article
-      class="drink-card"
+      class="drink-card incomplete-card"
       data-open-slug="${esc(drink.slug)}"
       role="button"
       tabindex="0"
@@ -1163,7 +1264,9 @@ function renderOneAwayCard(drink) {
           ${isFav ? icon('heartFilled') : icon('heart')}
         </button>
 
-        <span class="photo-category missing-badge">Falta: ${esc(missingName)}</span>
+        <span class="photo-category ${drink.verificationError ? 'unverified-badge' : 'missing-badge'}">
+          ${drink.verificationError ? 'No verificado' : missingCountLabel}
+        </span>
         ${prep ? `
           <span class="photo-time">
             ${icon('clock')}
@@ -1173,12 +1276,18 @@ function renderOneAwayCard(drink) {
       </div>
 
       <div class="card-copy">
+        <div class="card-readiness ${drink.verificationError ? 'is-unverified' : 'is-missing'}">
+          <span aria-hidden="true">${drink.verificationError ? '?' : '✕'}</span>
+          ${drink.verificationError ? 'No pudimos verificar esta receta' : 'Todavía no podés prepararlo'}
+        </div>
         <h3>${esc(drink.name)}</h3>
 
         <!-- Lista visual de ingredientes: priorizando los que tengo -->
         <div class="card-ingredients-container">
           <div class="card-match-bar">
-            <span class="match-text partial-match">Tenés ${owned} de ${total} (falta 1)</span>
+            <span class="match-text ${drink.verificationError ? 'unverified-match' : 'partial-match'}">
+              ${drink.verificationError ? 'No se pudo comprobar la lista de ingredientes' : `Tenés ${owned} de ${total} ingredientes`}
+            </span>
           </div>
           <div class="card-ingredients-chips">
             ${analyzed.map((item) => `
@@ -1190,19 +1299,22 @@ function renderOneAwayCard(drink) {
           </div>
         </div>
 
-        <div class="missing-info">
-          <div class="missing-row">
-            <strong>Te falta</strong>
-            <button
-              type="button"
-              class="add-missing-btn"
-              data-add-missing="${esc(missingName)}"
-              title="Agregar ${esc(missingName)} a mis ingredientes"
-            >
-              + Tengo esto
-            </button>
-          </div>
-          <span>${esc(missingName)}</span>
+        <div class="missing-info ${drink.verificationError ? 'unverified-info' : ''}">
+          ${drink.verificationError ? `
+            <strong>No pudimos verificar los ingredientes</strong>
+            <span class="missing-help">Abrí la receta para revisar su lista completa.</span>
+          ` : `
+            <strong>${missingNames.length > 1 ? 'Te faltan para prepararlo' : 'Te falta para prepararlo'}</strong>
+            <div class="missing-items-list">
+              ${missingNames.map((name) => `
+                <div class="missing-row">
+                  <span class="missing-item-name">${esc(name)}</span>
+                  <button type="button" class="add-missing-btn" data-add-missing="${esc(name)}"
+                    title="Agregar ${esc(name)} a mis ingredientes">+ Tengo esto</button>
+                </div>
+              `).join('') || `<span class="missing-item-name">${esc(missingName)}</span>`}
+            </div>
+          `}
         </div>
 
         <div class="card-footer">
@@ -1699,7 +1811,7 @@ app.addEventListener('click', (event) => {
     return;
   }
 
-  // Click en pestaña de resultados ("Podés preparar" vs "Te falta 1 ingrediente")
+  // Cambiar entre tragos listos y recetas que todavía tienen faltantes
   const resultsTab = event.target.closest('[data-results-tab]');
   if (resultsTab) {
     resultsActiveTab = resultsTab.dataset.resultsTab;
@@ -1926,7 +2038,7 @@ matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=11').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=14').catch(() => {});
   });
 }
 
