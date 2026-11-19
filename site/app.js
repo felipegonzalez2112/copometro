@@ -3,21 +3,16 @@ const INGREDIENTS_KEY = 'chinchin.ingredients.v1';
 const FAVORITES_KEY = 'chinchin.favorites.v1';
 const API_BASE = 'https://24cocktails.com/api/v1';
 
-// Categorías del catálogo de ingredientes
+// Separar visualmente las bebidas de los ingredientes que las acompañan.
 const INGREDIENT_CATEGORIES = [
-  { id: 'frecuentes', label: '⭐ Frecuentes' },
-  { id: 'espirituosas', label: '🥃 Espirituosas' },
-  { id: 'licores', label: '🍷 Licores & Aperitivos' },
-  { id: 'mezcladores', label: '🥤 Mezcladores' },
-  { id: 'frutas', label: '🍋 Frutas & Cítricos' },
-  { id: 'basicos', label: '🌿 Básicos & Especias' }
+  { id: 'espirituosas', group: 'bebidas', label: '🥃 Destilados' },
+  { id: 'licores', group: 'bebidas', label: '🍷 Licores & aperitivos' },
+  { id: 'mezcladores', group: 'ingredientes', label: '🥤 Mezcladores' },
+  { id: 'frutas', group: 'ingredientes', label: '🍋 Frutas & cítricos' },
+  { id: 'basicos', group: 'ingredientes', label: '🌿 Básicos & especias' }
 ];
 
 const INGREDIENT_CATALOG = {
-  frecuentes: [
-    'Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila',
-    'Lima', 'Limón', 'Naranja', 'Coca-Cola', 'Tónica', 'Soda'
-  ],
   espirituosas: [
     'Gin', 'Vodka', 'Ron', 'Whisky', 'Tequila', 'Fernet',
     'Bourbon', 'Scotch', 'Mezcal', 'Brandy', 'Cognac', 'Pisco'
@@ -208,7 +203,8 @@ let favorites = loadFavorites();
 
 // Navegación principal
 let activeMainView = 'search'; // 'search' | 'favorites'
-let activeCategoryTab = 'frecuentes';
+let activeIngredientGroup = 'bebidas';
+let activeCategoryTab = 'espirituosas';
 
 let searchState = {
   status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
@@ -715,7 +711,9 @@ function render() {
 }
 
 function renderHome() {
-  const currentCategoryItems = INGREDIENT_CATALOG[activeCategoryTab] || INGREDIENT_CATALOG.frecuentes;
+  const activeCategory = INGREDIENT_CATEGORIES.find((cat) => cat.id === activeCategoryTab)
+    || INGREDIENT_CATEGORIES[0];
+  const currentCategoryItems = INGREDIENT_CATALOG[activeCategory.id] || [];
   const isChangedSinceSearch = searchState.status === 'success' && searchState.searchedKey !== selectedIngredients.slice().sort().join(',').toLowerCase();
 
   return `
@@ -761,11 +759,29 @@ function renderHome() {
           </button>
         </form>
 
-        <!-- Explorador de Ingredientes por Categoría -->
+        <!-- Selector separado entre bebidas y otros ingredientes -->
         <div class="category-tabs-container">
-          <div class="section-subtitle">Explorar por categoría</div>
-          <div class="category-tabs" role="tablist" aria-label="Categorías de ingredientes">
-            ${INGREDIENT_CATEGORIES.map((cat) => `
+          <div class="ingredient-group-tabs" role="tablist" aria-label="Tipo de producto">
+            <button type="button" class="ingredient-group-tab ${activeIngredientGroup === 'bebidas' ? 'active' : ''}"
+              role="tab" aria-selected="${activeIngredientGroup === 'bebidas'}" data-select-ingredient-group="bebidas">
+              <span class="group-tab-icon">${icon('bottle')}</span>
+              <span><strong>Bebidas</strong><small>Gin, vodka, ron...</small></span>
+            </button>
+            <button type="button" class="ingredient-group-tab ${activeIngredientGroup === 'ingredientes' ? 'active' : ''}"
+              role="tab" aria-selected="${activeIngredientGroup === 'ingredientes'}" data-select-ingredient-group="ingredientes">
+              <span class="group-tab-icon">${icon('sparkles')}</span>
+              <span><strong>Ingredientes</strong><small>Frutas, mezcladores...</small></span>
+            </button>
+          </div>
+          <div class="ingredient-group-panel" role="tabpanel">
+            <div class="ingredient-group-heading">
+              <div>
+                <h2>${activeIngredientGroup === 'bebidas' ? '¿Qué bebidas tenés?' : '¿Qué más hay en tu cocina?'}</h2>
+                <p>${activeIngredientGroup === 'bebidas' ? 'Elegí tus destilados, licores y aperitivos.' : 'Sumá mezcladores, frutas y básicos para completar tu barra.'}</p>
+              </div>
+            </div>
+            <div class="category-tabs" role="tablist" aria-label="Subcategorías">
+            ${INGREDIENT_CATEGORIES.filter((cat) => cat.group === activeIngredientGroup).map((cat) => `
               <button
                 type="button"
                 class="category-tab ${activeCategoryTab === cat.id ? 'active' : ''}"
@@ -776,10 +792,10 @@ function renderHome() {
                 ${esc(cat.label)}
               </button>
             `).join('')}
-          </div>
+            </div>
 
           <!-- Chips de la categoría activa -->
-          <div class="frequent-wrap" role="group" aria-label="Ingredientes">
+          <div class="frequent-wrap" role="group" aria-label="${esc(activeCategory.label.replace(/^[^ ]+ /, ''))}">
             ${currentCategoryItems.map((item) => {
               const isSelected = selectedIngredients.some(
                 (selected) => selected.toLowerCase() === item.toLowerCase()
@@ -796,6 +812,7 @@ function renderHome() {
                 </button>
               `;
             }).join('')}
+          </div>
           </div>
         </div>
 
@@ -1693,7 +1710,19 @@ app.addEventListener('click', (event) => {
     return;
   }
 
-  // Click en pestaña de categoría de ingredientes
+  // Cambiar entre bebidas e ingredientes
+  const ingredientGroupTab = event.target.closest('[data-select-ingredient-group]');
+  if (ingredientGroupTab) {
+    activeIngredientGroup = ingredientGroupTab.dataset.selectIngredientGroup;
+    const groupCategories = INGREDIENT_CATEGORIES.filter((cat) => cat.group === activeIngredientGroup);
+    if (!groupCategories.some((cat) => cat.id === activeCategoryTab)) {
+      activeCategoryTab = groupCategories[0]?.id || INGREDIENT_CATEGORIES[0].id;
+    }
+    render();
+    return;
+  }
+
+  // Click en pestaña de subcategoría
   const catTab = event.target.closest('[data-select-category]');
   if (catTab) {
     activeCategoryTab = catTab.dataset.selectCategory;
