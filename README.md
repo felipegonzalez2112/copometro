@@ -7,17 +7,23 @@ Es un sitio estático construido con HTML5, CSS y JavaScript Vanilla (sin framew
 ## Funcionalidades
 
 - **Mis ingredientes:**
-  - Buscador para agregar cualquier bebida o ingrediente.
-  - Selección rápida de ingredientes frecuentes: *Gin, Vodka, Ron, Whisky, Fernet, Tequila, Lima, Limón, Naranja, Coca-Cola, Tónica y Soda*.
+  - Buscador con autocompletado en vivo de licores, mezcladores y botellas.
+  - Explorador por categorías: *Frecuentes, Espirituosas, Licores & Aperitivos, Mezcladores, Frutas & Cítricos, Básicos & Especias*.
   - Etiquetas con eliminación individual y persistencia local en el navegador (`localStorage`).
   - Botón "Buscar tragos".
-- **Resultados:**
-  - **Podés preparar:** Tragos que podés hacer con los ingredientes disponibles, con nombre, fotografía, graduación alcohólica (ABV), tiempo de preparación e ingredientes.
-  - **Te falta un ingrediente:** Tragos a los que solo les falta un ingrediente específico, destacando cuál falta.
+- **Resultados Claros y Priorizados:**
+  - **Identificación visual de ingredientes:** Cada tarjeta y receta muestra claramente qué ingredientes tenés (`✓ Tenés`) y cuáles te faltan (`✕ Falta`), **priorizando y listando primero los que ya tenés en tu barra**.
+  - **Pestañas organizadas:** Alternar entre *Podés preparar* y *Te falta 1 ingrediente*.
+  - **Filtros avanzados:** Filtrar por bebida alcohólica base (Gin, Vodka, Ron, etc.), buscador rápido por nombre, y filtro por ingrediente faltante.
+  - **Botón `+ Tengo esto`:** Si ves un trago al que le falta un ingrediente y lo tenés en casa, lo sumás con un solo toque y se recalcula la búsqueda al instante.
 - **Detalle del trago:**
-  - Pantalla con fotografía, nombre, tipo de vaso, graduación alcohólica, tiempo, método, medidas e ingredientes exactos, instrucciones de preparación paso a paso y enlace a la receta completa original en 24cocktails.com.
+  - Medidas exactas, tipo de vaso, graduación alcohólica, método, guarnición, instrucciones paso a paso y enlace a la receta original en 24cocktails.com.
+- **Favoritos & Calificaciones:**
+  - Guardá tus cócteles favoritos con un botón de corazón.
+  - Calificá si te gustó o no (👍 / 👎), puntuá de 1 a 5 estrellas ⭐ y agregá notas o comentarios personales.
+  - Sección dedicada **"Favoritos"** que te indica en tiempo real si podés preparar cada trago hoy con los ingredientes actuales de tu barra.
 - **PWA & Temas:**
-  - Modo sin conexión para el shell de la aplicación.
+  - Shell offline con Service Worker.
   - Tema claro / oscuro / sistema con paleta sobria grafito y salvia.
 
 ## Ejecutar en local

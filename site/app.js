@@ -1,5 +1,6 @@
 const THEME_KEY = 'chinchin.theme.v1';
 const INGREDIENTS_KEY = 'chinchin.ingredients.v1';
+const FAVORITES_KEY = 'chinchin.favorites.v1';
 const API_BASE = 'https://24cocktails.com/api/v1';
 
 // Categorías del catálogo de ingredientes
@@ -154,7 +155,7 @@ const INGREDIENT_ALIASES = {
   'pisco': 'pisco'
 };
 
-// Índice plano para autocompletado rápido
+// Autocomplete index
 const AUTOCOMPLETE_INDEX = [];
 (function buildAutocompleteIndex() {
   const seen = new Set();
@@ -181,7 +182,13 @@ const icons = {
   alert: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
   check: '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
   sparkles: '<svg viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>',
-  filter: '<svg viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>'
+  heart: '<svg viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+  heartFilled: '<svg viewBox="0 0 24 24" style="fill:currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+  thumbUp: '<svg viewBox="0 0 24 24"><path d="M7 10v12M15 10h5.5a2.5 2.5 0 0 1 2.5 2.5c0 .35-.07.69-.2 1l-2.4 6c-.36.9-1.23 1.5-2.2 1.5H7m0-11H3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4M7 10l5-8a2 2 0 0 1 2 2v6"/></svg>',
+  thumbDown: '<svg viewBox="0 0 24 24"><path d="M17 14V2M9 14H3.5A2.5 2.5 0 0 1 1 11.5c0-.35.07-.69.2-1l2.4-6C3.96 3.6 4.83 3 5.8 3H17m0 11h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4m0 11-5 8a2 2 0 0 1-2-2v-6"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  starFilled: '<svg viewBox="0 0 24 24" style="fill:currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'
 };
 
 const app = document.querySelector('#app');
@@ -194,10 +201,15 @@ let currentDrinksMap = new Map();
 // Control de peticiones concurrentes
 let activeSearchAbort = null;
 
-// Estado principal de la aplicación
+// Estado principal
 let themePreference = readThemePreference();
 let selectedIngredients = loadSavedIngredients();
+let favorites = loadFavorites();
+
+// Navegación principal
+let activeMainView = 'search'; // 'search' | 'favorites'
 let activeCategoryTab = 'frecuentes';
+
 let searchState = {
   status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
   error: null,
@@ -205,11 +217,14 @@ let searchState = {
   searchedKey: ''
 };
 
-// Filtros y pestañas dentro de los resultados
+// Filtros y pestañas en resultados
 let resultsActiveTab = 'can_make'; // 'can_make' | 'one_away'
-let filterBase = 'all'; // 'all' | 'gin' | 'vodka' | 'rum' | 'whiskey' | 'tequila' | 'other'
+let filterBase = 'all';
 let filterMissing = 'all';
 let filterQuery = '';
+
+// Filtro en vista de favoritos
+let favFilter = 'all'; // 'all' | 'liked' | 'disliked' | 'ready'
 
 // Autocomplete state
 let autocompleteSuggestions = [];
@@ -262,6 +277,23 @@ function persistIngredients() {
   } catch {}
 }
 
+function loadFavorites() {
+  try {
+    const saved = localStorage.getItem(FAVORITES_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistFavorites() {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  } catch {}
+}
+
 function notify(message) {
   notice = message;
   render();
@@ -305,6 +337,127 @@ function buildHaveQuery(ingredients) {
   return Array.from(tokens).join(',');
 }
 
+// ----------------------------------------------------
+// ANÁLISIS DE INGREDIENTES (Tengo vs Me falta, priorizando los que tengo)
+// ----------------------------------------------------
+
+function analyzeDrinkIngredients(drink) {
+  const ingredients = Array.isArray(drink.ingredients) ? drink.ingredients : [];
+  if (!ingredients.length) return [];
+
+  // Si tiene 'missing', sabemos exactamente qué ingrediente falta
+  const missingName = (drink.missing?.name || '').toLowerCase();
+  const missingKey = (drink.missing?.key || '').toLowerCase();
+
+  const analyzed = ingredients.map((ing) => {
+    const lower = ing.toLowerCase();
+    let isMissing = false;
+
+    if (drink.missing) {
+      if (missingKey && lower.includes(missingKey)) {
+        isMissing = true;
+      } else if (missingName && (missingName.includes(lower) || lower.includes(missingName))) {
+        isMissing = true;
+      } else if (missingKey === 'cola' && lower.includes('coca')) {
+        isMissing = true;
+      } else if (missingKey === 'tonic' && lower.includes('tónica')) {
+        isMissing = true;
+      }
+    } else if (!searchState.data?.can_make?.results?.some((d) => d.slug === drink.slug)) {
+      // Si estamos verificando un favorito guardado y no viene de can_make
+      const hasMatch = selectedIngredients.some((sel) => {
+        const selLow = sel.toLowerCase();
+        return lower.includes(selLow) || selLow.includes(lower);
+      });
+      isMissing = !hasMatch;
+    }
+
+    return {
+      name: ing,
+      owned: !isMissing
+    };
+  });
+
+  // Priorizar los que tengo primero
+  analyzed.sort((a, b) => (b.owned ? 1 : 0) - (a.owned ? 1 : 0));
+  return analyzed;
+}
+
+// ----------------------------------------------------
+// FAVORITOS Y CALIFICACIONES
+// ----------------------------------------------------
+
+function isFavorite(slug) {
+  return favorites.some((f) => f.slug === slug);
+}
+
+function getFavorite(slug) {
+  return favorites.find((f) => f.slug === slug) || null;
+}
+
+function toggleFavorite(drink) {
+  if (!drink) return;
+  const existingIdx = favorites.findIndex((f) => f.slug === drink.slug);
+  if (existingIdx >= 0) {
+    favorites.splice(existingIdx, 1);
+    persistFavorites();
+    notify(`"${drink.name}" eliminado de favoritos`);
+  } else {
+    favorites.unshift({
+      slug: drink.slug,
+      name: drink.name,
+      photo: drink.photo || '',
+      base: drink.base || '',
+      abv: drink.abv,
+      prep_minutes: drink.prep_minutes,
+      glass: drink.glass,
+      ingredients: drink.ingredients || [],
+      liked: null,
+      score: 0,
+      notes: '',
+      savedAt: new Date().toISOString()
+    });
+    persistFavorites();
+    notify(`¡"${drink.name}" guardado en Favoritos! ❤️`);
+  }
+  render();
+}
+
+function saveDrinkRating(slug, { liked, score, notes }) {
+  let fav = favorites.find((f) => f.slug === slug);
+  if (!fav) {
+    // Si no estaba en favoritos, lo agregamos con la data actual
+    const drink = currentDrinksMap.get(slug) || screen.fullRecipe || screen.selectedBasic || {};
+    fav = {
+      slug,
+      name: drink.name || 'Cóctel',
+      photo: drink.photo || '',
+      base: drink.base || '',
+      abv: drink.abv,
+      prep_minutes: drink.prep_minutes,
+      glass: drink.glass,
+      ingredients: drink.ingredients || [],
+      liked,
+      score,
+      notes,
+      savedAt: new Date().toISOString()
+    };
+    favorites.unshift(fav);
+  } else {
+    fav.liked = liked;
+    fav.score = score;
+    fav.notes = notes;
+    fav.savedAt = new Date().toISOString();
+  }
+  persistFavorites();
+  notify('¡Calificación y nota guardadas! ⭐');
+  render();
+}
+
+// ----------------------------------------------------
+// CONSULTA A LA API DE 24COCKTAILS
+// ----------------------------------------------------
+
 async function searchCocktails(keepTab = false) {
   if (!selectedIngredients.length) {
     notify('Seleccioná al menos un ingrediente para buscar');
@@ -329,7 +482,7 @@ async function searchCocktails(keepTab = false) {
     return;
   }
 
-  // Cancelar petición anterior si estuviera corriendo
+  // Cancelar petición previa si estuviera en curso
   if (activeSearchAbort) {
     activeSearchAbort.abort();
   }
@@ -376,6 +529,12 @@ function updateDrinksMap(data) {
   if (data?.one_away?.results) {
     data.one_away.results.forEach((d) => currentDrinksMap.set(d.slug, d));
   }
+  // También indexar favoritos
+  favorites.forEach((f) => {
+    if (!currentDrinksMap.has(f.slug)) {
+      currentDrinksMap.set(f.slug, f);
+    }
+  });
 }
 
 async function openRecipeDetail(slug) {
@@ -472,7 +631,6 @@ function clearAllIngredients() {
 function filterDrinksList(drinks) {
   if (!drinks) return [];
   return drinks.filter((drink) => {
-    // Filtro por base de alcohol
     if (filterBase !== 'all') {
       const drinkBase = (drink.base || '').toLowerCase();
       if (filterBase === 'other') {
@@ -484,7 +642,6 @@ function filterDrinksList(drinks) {
       }
     }
 
-    // Filtro por ingrediente faltante (solo aplica en one_away)
     if (filterMissing !== 'all' && drink.missing) {
       const missingName = drink.missing.name || '';
       if (missingName !== filterMissing) {
@@ -492,7 +649,6 @@ function filterDrinksList(drinks) {
       }
     }
 
-    // Filtro de texto por nombre o ingrediente
     if (filterQuery.trim()) {
       const q = filterQuery.toLowerCase();
       const matchName = (drink.name || '').toLowerCase().includes(q);
@@ -515,19 +671,45 @@ function render() {
         <span class="brand-mark">C</span>
         <span>ChinChin<span class="gold">.</span></span>
       </button>
-      <label class="theme-picker">
-        <span>Tema</span>
-        <select id="theme-select" aria-label="Apariencia de ChinChin">
-          <option value="system" ${themePreference === 'system' ? 'selected' : ''}>Sistema</option>
-          <option value="light" ${themePreference === 'light' ? 'selected' : ''}>Claro</option>
-          <option value="dark" ${themePreference === 'dark' ? 'selected' : ''}>Oscuro</option>
-        </select>
-      </label>
+
+      <!-- Navegación Mi Barra vs Favoritos -->
+      <nav class="main-nav" aria-label="Vistas principales">
+        <button
+          type="button"
+          class="nav-tab ${activeMainView === 'search' && screen.page !== 'detail' ? 'active' : ''}"
+          data-nav="search"
+        >
+          ${icon('bottle')}
+          <span>Mi Barra</span>
+        </button>
+        <button
+          type="button"
+          class="nav-tab ${activeMainView === 'favorites' && screen.page !== 'detail' ? 'active' : ''}"
+          data-nav="favorites"
+        >
+          ${icon('heartFilled')}
+          <span>Favoritos</span>
+          ${favorites.length ? `<span class="nav-badge">${favorites.length}</span>` : ''}
+        </button>
+      </nav>
+
+      <div class="topbar-right">
+        <label class="theme-picker">
+          <select id="theme-select" aria-label="Apariencia de ChinChin">
+            <option value="system" ${themePreference === 'system' ? 'selected' : ''}>Sistema</option>
+            <option value="light" ${themePreference === 'light' ? 'selected' : ''}>Claro</option>
+            <option value="dark" ${themePreference === 'dark' ? 'selected' : ''}>Oscuro</option>
+          </select>
+        </label>
+      </div>
     </header>
+
     ${notice ? `<div class="toast" role="status">${esc(notice)}</div>` : ''}
-    ${screen.page === 'detail' ? renderDetail() : renderHome()}
+
+    ${screen.page === 'detail' ? renderDetail() : activeMainView === 'favorites' ? renderFavoritesView() : renderHome()}
+
     <footer class="footer">
-      ChinChin · Recomendador de tragos · Datos por 24cocktails.com
+      ChinChin · Recomendador de tragos & bitácora · Datos por 24cocktails.com
     </footer>
   `;
 }
@@ -542,7 +724,7 @@ function renderHome() {
         <span class="overline">¿QUÉ HAY EN TU BARRA?</span>
         <h1>Mis ingredientes</h1>
         <p class="catalog-lead">
-          Elegí o buscá las bebidas e ingredientes que tenés disponibles. Te recomendaremos qué cócteles podés armar al instante.
+          Elegí o buscá las bebidas e ingredientes que tenés disponibles. Te recomendaremos qué cócteles podés armar y qué te falta para otros.
         </p>
       </section>
 
@@ -716,7 +898,6 @@ function renderResultsState() {
       `;
     }
 
-    // Calcular frecuencias de ingredientes faltantes para el filtro
     const missingCounts = {};
     for (const d of rawOneAway) {
       const name = d.missing?.name || 'Otro';
@@ -724,7 +905,6 @@ function renderResultsState() {
     }
     const sortedMissing = Object.entries(missingCounts).sort((a, b) => b[1] - a[1]);
 
-    // Aplicar filtros a cada lista
     const filteredCanMake = filterDrinksList(rawCanMake);
     const filteredOneAway = filterDrinksList(rawOneAway);
 
@@ -753,10 +933,9 @@ function renderResultsState() {
         </button>
       </nav>
 
-      <!-- Barra de Filtros secundarios (Base, Búsqueda, Faltante) -->
+      <!-- Barra de Filtros secundarios -->
       <div class="results-filter-bar">
         <div class="filter-group">
-          <!-- Búsqueda en resultados -->
           <div class="drink-search-wrap">
             ${icon('search')}
             <input
@@ -768,7 +947,6 @@ function renderResultsState() {
             />
           </div>
 
-          <!-- Filtro por Base Spirit -->
           <select class="filter-select" id="base-filter-select" aria-label="Filtrar por bebida base">
             <option value="all" ${filterBase === 'all' ? 'selected' : ''}>Todas las bases</option>
             <option value="gin" ${filterBase === 'gin' ? 'selected' : ''}>Gin</option>
@@ -782,7 +960,6 @@ function renderResultsState() {
         </div>
 
         ${resultsActiveTab === 'one_away' && sortedMissing.length ? `
-          <!-- Filtro por Ingrediente Faltante -->
           <select class="filter-select" id="missing-filter-select" aria-label="Filtrar por lo que te falta">
             <option value="all" ${filterMissing === 'all' ? 'selected' : ''}>Cualquier faltante</option>
             ${sortedMissing.slice(0, 15).map(([name, count]) => `
@@ -808,7 +985,6 @@ function renderResultsState() {
           </div>
         `}
       ` : `
-        <!-- Pestaña Te falta 1 ingrediente -->
         ${sortedMissing.length > 1 ? `
           <div class="missing-filter-scroll" role="group" aria-label="Filtro rápido de faltantes">
             <button
@@ -852,7 +1028,12 @@ function renderCanMakeCard(drink) {
   const photoUrl = drink.photo || '';
   const abv = drink.abv !== undefined && drink.abv !== null ? `${drink.abv}% alc.` : null;
   const prep = drink.prep_minutes ? `${drink.prep_minutes} min` : null;
-  const ingredientsStr = Array.isArray(drink.ingredients) ? drink.ingredients.join(', ') : '';
+  const isFav = isFavorite(drink.slug);
+
+  // Analizar ingredientes: priorizar los que tengo
+  const analyzed = analyzeDrinkIngredients(drink);
+  const total = analyzed.length;
+  const owned = analyzed.filter((i) => i.owned).length;
 
   return `
     <article
@@ -880,6 +1061,18 @@ function renderCanMakeCard(drink) {
             <span>${esc(drink.name)}</span>
           </div>
         `}
+
+        <!-- Botón Favorito -->
+        <button
+          type="button"
+          class="card-fav-btn ${isFav ? 'favorited' : ''}"
+          data-toggle-fav="${esc(drink.slug)}"
+          aria-label="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}"
+          title="${isFav ? 'En favoritos' : 'Guardar en favoritos'}"
+        >
+          ${isFav ? icon('heartFilled') : icon('heart')}
+        </button>
+
         ${abv ? `<span class="photo-category">${esc(abv)}</span>` : ''}
         ${prep ? `
           <span class="photo-time">
@@ -888,13 +1081,25 @@ function renderCanMakeCard(drink) {
           </span>
         ` : ''}
       </div>
+
       <div class="card-copy">
         <h3>${esc(drink.name)}</h3>
-        ${ingredientsStr ? `
-          <p class="card-ingredients" title="${esc(ingredientsStr)}">
-            ${esc(ingredientsStr)}
-          </p>
-        ` : ''}
+
+        <!-- Lista visual de ingredientes: priorizando los que tengo -->
+        <div class="card-ingredients-container">
+          <div class="card-match-bar">
+            <span class="match-text full-match">✓ Tenés todos (${owned}/${total})</span>
+          </div>
+          <div class="card-ingredients-chips">
+            ${analyzed.map((item) => `
+              <span class="ing-badge owned">
+                <span class="ing-icon">✓</span>
+                <span class="ing-name">${esc(item.name)}</span>
+              </span>
+            `).join('')}
+          </div>
+        </div>
+
         <div class="card-footer">
           <span class="card-link">Ver receta completa →</span>
         </div>
@@ -907,6 +1112,12 @@ function renderOneAwayCard(drink) {
   const photoUrl = drink.photo || '';
   const prep = drink.prep_minutes ? `${drink.prep_minutes} min` : null;
   const missingName = drink.missing?.name || '1 ingrediente';
+  const isFav = isFavorite(drink.slug);
+
+  // Analizar ingredientes: priorizar los que tengo
+  const analyzed = analyzeDrinkIngredients(drink);
+  const total = analyzed.length;
+  const owned = analyzed.filter((i) => i.owned).length;
 
   return `
     <article
@@ -934,6 +1145,18 @@ function renderOneAwayCard(drink) {
             <span>${esc(drink.name)}</span>
           </div>
         `}
+
+        <!-- Botón Favorito -->
+        <button
+          type="button"
+          class="card-fav-btn ${isFav ? 'favorited' : ''}"
+          data-toggle-fav="${esc(drink.slug)}"
+          aria-label="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}"
+          title="${isFav ? 'En favoritos' : 'Guardar en favoritos'}"
+        >
+          ${isFav ? icon('heartFilled') : icon('heart')}
+        </button>
+
         <span class="photo-category missing-badge">Falta: ${esc(missingName)}</span>
         ${prep ? `
           <span class="photo-time">
@@ -942,8 +1165,25 @@ function renderOneAwayCard(drink) {
           </span>
         ` : ''}
       </div>
+
       <div class="card-copy">
         <h3>${esc(drink.name)}</h3>
+
+        <!-- Lista visual de ingredientes: priorizando los que tengo -->
+        <div class="card-ingredients-container">
+          <div class="card-match-bar">
+            <span class="match-text partial-match">Tenés ${owned} de ${total} (falta 1)</span>
+          </div>
+          <div class="card-ingredients-chips">
+            ${analyzed.map((item) => `
+              <span class="ing-badge ${item.owned ? 'owned' : 'missing'}">
+                <span class="ing-icon">${item.owned ? '✓' : '✕'}</span>
+                <span class="ing-name">${esc(item.name)}</span>
+              </span>
+            `).join('')}
+          </div>
+        </div>
+
         <div class="missing-info">
           <div class="missing-row">
             <strong>Te falta</strong>
@@ -958,6 +1198,7 @@ function renderOneAwayCard(drink) {
           </div>
           <span>${esc(missingName)}</span>
         </div>
+
         <div class="card-footer">
           <span class="card-link">Ver receta →</span>
         </div>
@@ -966,9 +1207,177 @@ function renderOneAwayCard(drink) {
   `;
 }
 
+// ----------------------------------------------------
+// VISTA: FAVORITOS & BITÁCORA PERSONAL
+// ----------------------------------------------------
+
+function renderFavoritesView() {
+  let list = [...favorites];
+
+  // Filtro de favoritos
+  if (favFilter === 'liked') {
+    list = list.filter((f) => f.liked === true);
+  } else if (favFilter === 'disliked') {
+    list = list.filter((f) => f.liked === false);
+  } else if (favFilter === 'ready') {
+    list = list.filter((f) => {
+      const analyzed = analyzeDrinkIngredients(f);
+      return analyzed.length > 0 && analyzed.every((i) => i.owned);
+    });
+  }
+
+  return `
+    <main class="favorites-view">
+      <section class="catalog-heading fav-header">
+        <span class="overline">MI BITÁCORA PERSONAL</span>
+        <h1>Tragos Favoritos</h1>
+        <p class="catalog-lead">
+          Los cócteles que guardaste, tus calificaciones personales y si podés prepararlos con lo que tenés en tu barra hoy.
+        </p>
+
+        <!-- Filtros de favoritos -->
+        <div class="fav-filter-tabs" role="tablist">
+          <button
+            type="button"
+            class="category-tab ${favFilter === 'all' ? 'active' : ''}"
+            data-set-fav-filter="all"
+          >
+            Todos (${favorites.length})
+          </button>
+          <button
+            type="button"
+            class="category-tab ${favFilter === 'liked' ? 'active' : ''}"
+            data-set-fav-filter="liked"
+          >
+            👍 Me gustaron (${favorites.filter((f) => f.liked === true).length})
+          </button>
+          <button
+            type="button"
+            class="category-tab ${favFilter === 'disliked' ? 'active' : ''}"
+            data-set-fav-filter="disliked"
+          >
+            👎 No repetiría (${favorites.filter((f) => f.liked === false).length})
+          </button>
+          <button
+            type="button"
+            class="category-tab ${favFilter === 'ready' ? 'active' : ''}"
+            data-set-fav-filter="ready"
+          >
+            ✓ Listos para preparar hoy
+          </button>
+        </div>
+      </section>
+
+      ${list.length ? `
+        <div class="drink-grid">
+          ${list.map(renderFavoriteCard).join('')}
+        </div>
+      ` : `
+        <div class="empty">
+          <div class="empty-icon">${icon('heart')}</div>
+          <h3>${favorites.length ? 'Ningún cóctel coincide con este filtro' : 'Todavía no guardaste ningún trago'}</h3>
+          <p>
+            ${favorites.length
+              ? 'Probá seleccionando "Todos" para ver tu colección.'
+              : 'Explorá los tragos recomendados en "Mi Barra" y tocale el corazón a los que más te gusten para puntuarlos y guardarlos.'}
+          </p>
+          ${!favorites.length ? `
+            <button type="button" class="button primary" data-nav="search">
+              Explorar tragos
+            </button>
+          ` : ''}
+        </div>
+      `}
+    </main>
+  `;
+}
+
+function renderFavoriteCard(drink) {
+  const photoUrl = drink.photo || '';
+  const abv = drink.abv !== undefined && drink.abv !== null ? `${drink.abv}% alc.` : null;
+  const analyzed = analyzeDrinkIngredients(drink);
+  const isReady = analyzed.length > 0 && analyzed.every((i) => i.owned);
+
+  return `
+    <article
+      class="drink-card"
+      data-open-slug="${esc(drink.slug)}"
+      role="button"
+      tabindex="0"
+      aria-label="Ver receta de ${esc(drink.name)}"
+    >
+      <div class="card-photo">
+        ${photoUrl ? `
+          <img
+            src="${esc(photoUrl)}"
+            alt="${esc(drink.name)}"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          />
+          <div class="placeholder" style="display:none;">
+            ${icon('bottle')}
+            <span>${esc(drink.name)}</span>
+          </div>
+        ` : `
+          <div class="placeholder">
+            ${icon('bottle')}
+            <span>${esc(drink.name)}</span>
+          </div>
+        `}
+
+        <button
+          type="button"
+          class="card-fav-btn favorited"
+          data-toggle-fav="${esc(drink.slug)}"
+          title="Quitar de favoritos"
+        >
+          ${icon('heartFilled')}
+        </button>
+
+        ${abv ? `<span class="photo-category">${esc(abv)}</span>` : ''}
+      </div>
+
+      <div class="card-copy">
+        <h3>${esc(drink.name)}</h3>
+
+        <!-- Disponibilidad actual en la barra -->
+        <span class="readiness-pill ${isReady ? 'ready' : 'not-ready'}">
+          ${isReady ? '✓ Podés prepararlo hoy' : '✕ Faltan ingredientes'}
+        </span>
+
+        <!-- Reseña del usuario -->
+        <div class="fav-card-review">
+          <div class="fav-stars-row">
+            <div class="fav-stars" aria-label="Calificación: ${drink.score} estrellas">
+              ${[1, 2, 3, 4, 5].map((s) => (s <= (drink.score || 0) ? '★' : '☆')).join('')}
+            </div>
+            ${drink.liked === true ? `
+              <span class="fav-opinion-badge like">👍 Me gustó</span>
+            ` : drink.liked === false ? `
+              <span class="fav-opinion-badge dislike">👎 No repetiría</span>
+            ` : '<span style="color:var(--muted); font-size:11px;">Sin nota</span>'}
+          </div>
+          ${drink.notes ? `
+            <p class="fav-user-note">“${esc(drink.notes)}”</p>
+          ` : ''}
+        </div>
+
+        <div class="card-footer">
+          <span class="card-link">Ver receta y calificar →</span>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// ----------------------------------------------------
+// VISTA: DETALLE DE TRAGO & CALIFICACIÓN
+// ----------------------------------------------------
+
 function renderDetail() {
   const basic = screen.selectedBasic || {};
   const full = screen.fullRecipe || {};
+  const slug = screen.selectedSlug;
   const name = full.name || basic.name || 'Detalle del trago';
   const photo = full.photo || basic.photo || '';
   const abv = full.abv !== undefined && full.abv !== null ? full.abv : basic.abv;
@@ -981,28 +1390,68 @@ function renderDetail() {
   const description = full.description || '';
   const url = full.url || basic.url || '';
 
+  const isFav = isFavorite(slug);
+  const currentFav = getFavorite(slug);
+
+  // Analizar ingredientes para saber cuáles tenés y cuáles faltan
+  const analyzedBasic = analyzeDrinkIngredients(basic);
+
   // Lista detallada de ingredientes
   let ingredientsHtml = '';
   if (Array.isArray(full.ingredients) && full.ingredients.length) {
+    // Si tenemos la receta completa con medidas
+    const detailedAnalyzed = full.ingredients.map((ing) => {
+      const match = analyzedBasic.find((b) => b.name.toLowerCase().includes(ing.name.toLowerCase()) || ing.name.toLowerCase().includes(b.name.toLowerCase()));
+      const owned = match ? match.owned : selectedIngredients.some((sel) => ing.name.toLowerCase().includes(sel.toLowerCase()));
+      return { ...ing, owned };
+    });
+
+    // Priorizar los que tengo
+    detailedAnalyzed.sort((a, b) => (b.owned ? 1 : 0) - (a.owned ? 1 : 0));
+
     ingredientsHtml = `
       <ul class="recipe-ingredients-list">
-        ${full.ingredients.map((ing) => `
-          <li class="ingredient-row">
+        ${detailedAnalyzed.map((ing) => `
+          <li class="ingredient-row ${ing.owned ? 'owned' : 'missing'}">
             <span class="ingredient-qty">${esc(ing.amount || 'Al gusto')}</span>
             <span class="ingredient-name">
-              ${esc(ing.name)}${ing.optional ? ' <small>(opcional)</small>' : ''}
+              <span>${esc(ing.name)}${ing.optional ? ' <small>(opcional)</small>' : ''}</span>
+              ${ing.owned ? `
+                <span class="ing-status-tag owned">✓ Tenés</span>
+              ` : `
+                <span class="ing-status-tag missing">✕ Te falta</span>
+                <button
+                  type="button"
+                  class="add-missing-btn"
+                  data-add-missing="${esc(ing.name)}"
+                  title="Sumar a mis ingredientes"
+                >+ Tengo esto</button>
+              `}
             </span>
           </li>
         `).join('')}
       </ul>
     `;
-  } else if (Array.isArray(basic.ingredients) && basic.ingredients.length) {
+  } else if (analyzedBasic.length) {
     ingredientsHtml = `
       <ul class="recipe-ingredients-list">
-        ${basic.ingredients.map((ing) => `
-          <li class="ingredient-row">
+        ${analyzedBasic.map((ing) => `
+          <li class="ingredient-row ${ing.owned ? 'owned' : 'missing'}">
             <span class="ingredient-qty">•</span>
-            <span class="ingredient-name">${esc(ing)}</span>
+            <span class="ingredient-name">
+              <span>${esc(ing.name)}</span>
+              ${ing.owned ? `
+                <span class="ing-status-tag owned">✓ Tenés</span>
+              ` : `
+                <span class="ing-status-tag missing">✕ Te falta</span>
+                <button
+                  type="button"
+                  class="add-missing-btn"
+                  data-add-missing="${esc(ing.name)}"
+                  title="Sumar a mis ingredientes"
+                >+ Tengo esto</button>
+              `}
+            </span>
           </li>
         `).join('')}
       </ul>
@@ -1039,7 +1488,7 @@ function renderDetail() {
   return `
     <main class="detail">
       <button class="back" data-action="back-home">
-        ${icon('back')} Volver a resultados
+        ${icon('back')} Volver
       </button>
 
       <section class="detail-hero">
@@ -1053,6 +1502,7 @@ function renderDetail() {
             </div>
           `}
         </div>
+
         <div class="detail-info">
           <span class="overline">${base ? `BASE: ${esc(base.toUpperCase())}` : 'CÓCTEL'}</span>
           <h1>${esc(name)}</h1>
@@ -1067,21 +1517,89 @@ function renderDetail() {
             ${garnish ? `<span>Decoración: ${esc(garnish)}</span>` : ''}
           </div>
 
-          ${url ? `
-            <div class="recipe-actions">
+          <div class="recipe-actions">
+            <!-- Botón Favorito en Hero -->
+            <button
+              type="button"
+              class="button secondary fav-action-btn ${isFav ? 'is-fav' : ''}"
+              data-toggle-fav="${esc(slug)}"
+            >
+              ${isFav ? icon('heartFilled') : icon('heart')}
+              <span>${isFav ? 'En Favoritos' : 'Guardar en Favoritos'}</span>
+            </button>
+
+            ${url ? `
               <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="button secondary">
-                ${icon('external')} Ver receta en 24cocktails.com
+                ${icon('external')} Ver en 24cocktails.com
               </a>
-            </div>
-          ` : ''}
+            ` : ''}
+          </div>
         </div>
       </section>
 
+      <!-- Widget de Calificación y Notas -->
+      <section class="rating-card" id="rating-section">
+        <h3>¿Probaste este cóctel? Calificalo</h3>
+        <p class="rating-desc">Guardá si te gustó, tu puntuación y notas personales sobre su sabor o preparación.</p>
+
+        <form id="rating-form" data-rating-slug="${esc(slug)}">
+          <div class="opinion-selector">
+            <button
+              type="button"
+              class="opinion-btn like ${currentFav?.liked === true ? 'active' : ''}"
+              data-set-opinion="like"
+            >
+              ${icon('thumbUp')} Me gustó
+            </button>
+            <button
+              type="button"
+              class="opinion-btn dislike ${currentFav?.liked === false ? 'active' : ''}"
+              data-set-opinion="dislike"
+            >
+              ${icon('thumbDown')} No me gustó
+            </button>
+          </div>
+
+          <div class="stars-selector-wrap" style="margin-top: 14px;">
+            <span class="stars-label">Puntuación:</span>
+            <div class="stars-selector" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">
+              ${[1, 2, 3, 4, 5].map((val) => `
+                <button
+                  type="button"
+                  class="star-btn ${(currentFav?.score || 0) >= val ? 'filled' : ''}"
+                  data-star-val="${val}"
+                  aria-label="${val} estrellas"
+                >
+                  ${(currentFav?.score || 0) >= val ? icon('starFilled') : icon('star')}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <textarea
+              class="notes-input"
+              id="rating-notes"
+              placeholder="Notas personales (ej. aroma, ocasiones, con qué marca de licor queda mejor...)"
+              maxlength="500"
+            >${esc(currentFav?.notes || '')}</textarea>
+          </div>
+
+          <div style="margin-top: 14px; display:flex; justify-content: flex-end;">
+            <button type="submit" class="button primary">
+              Guardar calificación
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Ingredientes y Preparación -->
       <section class="detail-content">
         <div class="detail-block">
           <h2>Ingredientes</h2>
           ${ingredientsHtml}
         </div>
+
         <div class="detail-block">
           <h2>Preparación</h2>
           ${stepsHtml}
@@ -1100,14 +1618,69 @@ function renderDetail() {
 // EVENT LISTENERS
 // ----------------------------------------------------
 
+let tempLiked = null;
+let tempScore = 0;
+
 app.addEventListener('click', (event) => {
-  // Manejo de "Tengo esto" para sumar ingrediente faltante directamente
+  // Cambio de navegación principal (Mi Barra vs Favoritos)
+  const navBtn = event.target.closest('[data-nav]');
+  if (navBtn) {
+    activeMainView = navBtn.dataset.nav;
+    screen.page = 'home';
+    render();
+    return;
+  }
+
+  // Filtro dentro de Favoritos
+  const favFilterBtn = event.target.closest('[data-set-fav-filter]');
+  if (favFilterBtn) {
+    favFilter = favFilterBtn.dataset.setFavFilter;
+    render();
+    return;
+  }
+
+  // Botón corazón para favoritos (toggle)
+  const favBtn = event.target.closest('[data-toggle-fav]');
+  if (favBtn) {
+    event.stopPropagation();
+    const slug = favBtn.dataset.toggleFav;
+    const drink = currentDrinksMap.get(slug) || screen.fullRecipe || screen.selectedBasic;
+    if (drink) {
+      toggleFavorite(drink);
+    }
+    return;
+  }
+
+  // Botón "+ Tengo esto" para sumar ingrediente faltante
   const addMissingBtn = event.target.closest('[data-add-missing]');
   if (addMissingBtn) {
     event.stopPropagation();
     const missingName = addMissingBtn.dataset.addMissing;
     notify(`¡Sumaste "${missingName}" a tu barra!`);
     addIngredient(missingName, true);
+    return;
+  }
+
+  // Selección de opinión en el formulario de calificación
+  const opinionBtn = event.target.closest('[data-set-opinion]');
+  if (opinionBtn) {
+    const isLike = opinionBtn.dataset.setOpinion === 'like';
+    tempLiked = isLike;
+    document.querySelectorAll('.opinion-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn === opinionBtn);
+    });
+    return;
+  }
+
+  // Selección de estrellas en el formulario de calificación
+  const starBtn = event.target.closest('[data-star-val]');
+  if (starBtn) {
+    tempScore = Number(starBtn.dataset.starVal);
+    document.querySelectorAll('.star-btn').forEach((btn) => {
+      const val = Number(btn.dataset.starVal);
+      btn.classList.toggle('filled', val <= tempScore);
+      btn.innerHTML = val <= tempScore ? icon('starFilled') : icon('star');
+    });
     return;
   }
 
@@ -1148,7 +1721,6 @@ app.addEventListener('click', (event) => {
     '[data-action], [data-toggle-frequent], [data-remove-ingredient], [data-open-slug]'
   );
   if (!target) {
-    // Si hace click fuera del autocomplete, cerrarlo
     if (autocompleteSuggestions.length) {
       autocompleteSuggestions = [];
       autocompleteHighlightIndex = -1;
@@ -1158,7 +1730,11 @@ app.addEventListener('click', (event) => {
   }
 
   if (target.dataset.openSlug) {
-    openRecipeDetail(target.dataset.openSlug);
+    const slug = target.dataset.openSlug;
+    const fav = getFavorite(slug);
+    tempLiked = fav ? fav.liked : null;
+    tempScore = fav ? fav.score : 0;
+    openRecipeDetail(slug);
     return;
   }
 
@@ -1202,7 +1778,6 @@ app.addEventListener('input', (event) => {
     }
     autocompleteHighlightIndex = -1;
 
-    // Actualizar solo el contenedor del dropdown si existe para no perder foco
     const dropdown = document.querySelector('#autocomplete-list');
     if (autocompleteSuggestions.length) {
       if (!dropdown) {
@@ -1244,13 +1819,13 @@ app.addEventListener('input', (event) => {
 });
 
 app.addEventListener('submit', (event) => {
+  // Submit de nuevo ingrediente
   if (event.target.id === 'add-ingredient-form') {
     event.preventDefault();
     const input = document.querySelector('#ingredient-input');
     if (!input) return;
     const value = input.value.trim();
     if (value) {
-      // Si había una sugerencia resaltada con teclado
       if (autocompleteHighlightIndex >= 0 && autocompleteSuggestions[autocompleteHighlightIndex]) {
         addIngredient(autocompleteSuggestions[autocompleteHighlightIndex].name);
       } else {
@@ -1260,6 +1835,25 @@ app.addEventListener('submit', (event) => {
       autocompleteSuggestions = [];
       autocompleteHighlightIndex = -1;
     }
+    return;
+  }
+
+  // Submit de calificación y nota
+  if (event.target.id === 'rating-form') {
+    event.preventDefault();
+    const slug = event.target.dataset.ratingSlug;
+    const notesInput = document.querySelector('#rating-notes');
+    const notes = notesInput ? notesInput.value.trim() : '';
+
+    const currentFav = getFavorite(slug);
+    const finalLiked = tempLiked !== null ? tempLiked : (currentFav ? currentFav.liked : null);
+    const finalScore = tempScore > 0 ? tempScore : (currentFav ? currentFav.score : 0);
+
+    saveDrinkRating(slug, {
+      liked: finalLiked,
+      score: finalScore,
+      notes
+    });
   }
 });
 
@@ -1334,7 +1928,7 @@ matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=10').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=11').catch(() => {});
   });
 }
 
