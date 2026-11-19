@@ -985,6 +985,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .ing-badge {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   gap: 4px;
   padding: 3px 8px;
   border-radius: 12px;
@@ -1004,6 +1005,9 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 .ing-badge .ing-icon {
   font-size: 10px;
+}
+.ing-name {
+  overflow-wrap: anywhere;
 }
 
 .missing-info {
@@ -1038,6 +1042,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   font-size: 15px;
   font-weight: 800;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 .missing-help {
   color: var(--muted);
@@ -1557,6 +1562,26 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .quick-pick-section .frequent-wrap {
     min-height: auto;
   }
+  .drink-card {
+    width: 100%;
+    min-width: 0;
+  }
+  .card-ingredients-chips {
+    max-height: none;
+    overflow: visible;
+  }
+  .missing-items-list {
+    gap: 10px;
+  }
+  .missing-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .add-missing-btn {
+    min-height: 36px;
+    justify-content: center;
+  }
   .ingredient-form {
     flex-direction: column;
   }
@@ -1569,13 +1594,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
     font-size: 12px;
   }
   .drink-grid {
-    gap: 12px;
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
   .card-photo {
-    height: clamp(140px, 40vw, 180px);
+    height: 170px;
   }
   .card-copy {
-    padding: 10px 11px 12px;
+    padding: 14px 16px 16px;
   }
   .card-copy h3 {
     font-size: 15px;

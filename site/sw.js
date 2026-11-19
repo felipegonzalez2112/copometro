@@ -1,9 +1,9 @@
-const CACHE = 'chinchin-shell-v14';
+const CACHE = 'chinchin-shell-v15';
 const FILES = [
   './',
   './index.html',
-  './styles.css?v=14',
-  './app.js?v=14',
+  './styles.css?v=15',
+  './app.js?v=15',
   './manifest.webmanifest',
   './chinchin-icon.svg'
 ];

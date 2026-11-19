@@ -2038,7 +2038,7 @@ matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=14').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=15').catch(() => {});
   });
 }
 
