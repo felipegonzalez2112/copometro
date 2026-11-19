@@ -1,7 +1,7 @@
 {
-  "name": "ChinChin — Mi colección",
+  "name": "ChinChin — Recomendador de tragos",
   "short_name": "ChinChin",
-  "description": "Tu colección personal de bebidas y notas de cata.",
+  "description": "Descubrí qué tragos podés preparar según las bebidas e ingredientes que tenés en casa.",
   "lang": "es-AR",
   "start_url": "./",
   "scope": "./",

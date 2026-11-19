@@ -1,6 +1,24 @@
-# ChinChin 🥂
+# ChinChin 🍸
 
-PWA personal para guardar bebidas y notas de cata. Es un sitio estático hecho con HTML, CSS y JavaScript: no necesita Node, React, una base remota ni una cuenta.
+PWA sencilla y moderna para recomendar tragos y cócteles según los ingredientes y bebidas que tenés disponibles en casa, consumiendo la API pública de [24cocktails](https://24cocktails.com/developers.html).
+
+Es un sitio estático construido con HTML5, CSS y JavaScript Vanilla (sin frameworks ni dependencias pesadas).
+
+## Funcionalidades
+
+- **Mis ingredientes:**
+  - Buscador para agregar cualquier bebida o ingrediente.
+  - Selección rápida de ingredientes frecuentes: *Gin, Vodka, Ron, Whisky, Fernet, Tequila, Lima, Limón, Naranja, Coca-Cola, Tónica y Soda*.
+  - Etiquetas con eliminación individual y persistencia local en el navegador (`localStorage`).
+  - Botón "Buscar tragos".
+- **Resultados:**
+  - **Podés preparar:** Tragos que podés hacer con los ingredientes disponibles, con nombre, fotografía, graduación alcohólica (ABV), tiempo de preparación e ingredientes.
+  - **Te falta un ingrediente:** Tragos a los que solo les falta un ingrediente específico, destacando cuál falta.
+- **Detalle del trago:**
+  - Pantalla con fotografía, nombre, tipo de vaso, graduación alcohólica, tiempo, método, medidas e ingredientes exactos, instrucciones de preparación paso a paso y enlace a la receta completa original en 24cocktails.com.
+- **PWA & Temas:**
+  - Modo sin conexión para el shell de la aplicación.
+  - Tema claro / oscuro / sistema con paleta sobria grafito y salvia.
 
 ## Ejecutar en local
 
@@ -10,20 +28,8 @@ Desde la carpeta del proyecto:
 python3 -m http.server 5173 --directory site
 ```
 
-Abrí `http://localhost:5173`. Para probar la instalación y el modo sin conexión, usá HTTPS o `localhost`.
-
-## Uso y datos
-
-- Agregá bebidas manualmente y elegí una foto de la galería.
-- Guardá, editá o eliminá las calificaciones desde el detalle.
-- La colección se guarda en el almacenamiento local del navegador de ese dispositivo.
-- El tema sigue la apariencia del sistema por defecto; también podés elegir claro u oscuro manualmente.
-- Las fotos se reducen antes de guardarse. Si el navegador se queda sin espacio, mostrará un aviso.
-- No hay sincronización entre dispositivos ni búsqueda externa de productos.
-- La PWA guarda sus archivos para abrir la aplicación sin conexión. Los datos quedan en el propio navegador.
+Abrí `http://localhost:5173` en tu navegador.
 
 ## GitHub Pages
 
-El workflow `.github/workflows/deploy.yml` publica el contenido de `site/` al actualizar `main`. En **Settings → Pages**, elegí **GitHub Actions** como fuente. La aplicación funciona bajo la ruta del repositorio, por ejemplo `https://felipegonzalez2112.github.io/copometro/`.
-
-En Android, abrí la web publicada en Chrome y elegí **Instalar aplicación** o **Agregar a pantalla de inicio** desde el menú del navegador. La colección no se sincroniza al cambiar de dispositivo.
+El workflow `.github/workflows/deploy.yml` publica automáticamente el contenido de `site/` al actualizar la rama `main`.

@@ -1,247 +1,908 @@
-const KEY = 'chinchin.collection.v1';
 const THEME_KEY = 'chinchin.theme.v1';
-const CATEGORIES = ['Vinos', 'Gin', 'Vodka', 'Aperitivos', 'Otros'];
+const INGREDIENTS_KEY = 'chinchin.ingredients.v1';
+const API_BASE = 'https://24cocktails.com/api/v1';
+
+const FREQUENT_INGREDIENTS = [
+  'Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila',
+  'Lima', 'Limón', 'Naranja', 'Coca-Cola', 'Tónica', 'Soda'
+];
+
+const INGREDIENT_ALIASES = {
+  'ron': 'rum,white_rum',
+  'rum': 'rum,white_rum',
+  'lima': 'lime,lime_juice',
+  'lime': 'lime,lime_juice',
+  'limon': 'lemon,lemon_juice',
+  'limón': 'lemon,lemon_juice',
+  'lemon': 'lemon,lemon_juice',
+  'naranja': 'orange,orange_juice',
+  'orange': 'orange,orange_juice',
+  'menta': 'mint',
+  'hierbabuena': 'mint',
+  'azucar': 'sugar,sugar_syrup',
+  'azúcar': 'sugar,sugar_syrup',
+  'almibar': 'sugar_syrup',
+  'almíbar': 'sugar_syrup',
+  'jarabe': 'sugar_syrup',
+  'miel': 'honey',
+  'cafe': 'coffee',
+  'café': 'coffee',
+  'leche': 'milk',
+  'crema': 'cream',
+  'vino': 'wine',
+  'cerveza': 'beer',
+  'frutilla': 'strawberry',
+  'fresa': 'strawberry',
+  'arandano': 'cranberry,cranberry_juice',
+  'arándano': 'cranberry,cranberry_juice',
+  'durazno': 'peach',
+  'melocoton': 'peach',
+  'melocotón': 'peach',
+  'pomelo': 'grapefruit,grapefruit_juice',
+  'anana': 'pineapple,pineapple_juice',
+  'ananá': 'pineapple,pineapple_juice',
+  'piña': 'pineapple,pineapple_juice',
+  'manzana': 'apple',
+  'huevo': 'egg',
+  'clara de huevo': 'egg_white',
+  'canela': 'cinnamon',
+  'jengibre': 'ginger',
+  'ginger beer': 'ginger_beer',
+  'sal': 'salt',
+  'soda': 'soda,soda_water',
+  'agua con gas': 'soda,soda_water',
+  'agua tonica': 'tonic',
+  'agua tónica': 'tonic',
+  'tonica': 'tonic',
+  'tónica': 'tonic',
+  'coca cola': 'cola',
+  'coca-cola': 'cola',
+  'coca': 'cola',
+  'jugo de lima': 'lime_juice',
+  'jugo de limon': 'lemon_juice',
+  'jugo de limón': 'lemon_juice',
+  'jugo de naranja': 'orange_juice',
+  'jugo de pomelo': 'grapefruit_juice',
+  'jugo de arandano': 'cranberry_juice',
+  'jugo de arándano': 'cranberry_juice',
+  'triple sec': 'triple_sec',
+  'cointreau': 'cointreau,triple_sec',
+  'aperol': 'aperol,campari',
+  'campari': 'campari',
+  'vermut': 'sweet_vermouth,dry_vermouth',
+  'vermouth': 'sweet_vermouth,dry_vermouth',
+  'vermut dulce': 'sweet_vermouth',
+  'vermut seco': 'dry_vermouth',
+  'champan': 'sparkling_wine',
+  'champán': 'sparkling_wine',
+  'espumante': 'sparkling_wine',
+  'prosecco': 'prosecco,sparkling_wine',
+  'licor de cafe': 'coffee_liqueur',
+  'licor de café': 'coffee_liqueur',
+  'kahlua': 'coffee_liqueur',
+  'kahlúa': 'coffee_liqueur',
+  'baileys': 'irish_cream',
+  'amaretto': 'amaretto',
+  'whisky': 'whiskey',
+  'whiskey': 'whiskey',
+  'bourbon': 'bourbon',
+  'scotch': 'scotch',
+  'gin': 'gin',
+  'ginebra': 'gin',
+  'vodka': 'vodka',
+  'tequila': 'tequila',
+  'fernet': 'fernet,amaro',
+  'cognac': 'cognac,brandy',
+  'coñac': 'cognac,brandy',
+  'brandy': 'brandy',
+  'mezcal': 'mezcal',
+  'pisco': 'pisco'
+};
+
 const icons = {
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
   bottle: '<svg viewBox="0 0 24 24"><path d="M9 3h6v3l2 2v12H7V8l2-2zM9 6h6M7 11h10"/></svg>',
   back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6M9 12h12"/></svg>',
-  star: '<svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg>',
-  trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>',
-  edit: '<svg viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l4-.8L19 8l-4-4L4 15z"/></svg>',
-  photo: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+  external: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>',
+  alert: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
+  sparkles: '<svg viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>'
 };
+
 const app = document.querySelector('#app');
-let drinks = load();
+
+// Caches to avoid duplicate requests
+const searchCache = new Map();
+const recipeCache = new Map();
+let currentDrinksMap = new Map();
+
+// In-flight request controller
+let activeSearchAbort = null;
+
+// Application state
 let themePreference = readThemePreference();
-let screen = { page: 'home', drinkId: null, modal: null, query: '', category: 'Todas', opinion: 'all', sort: 'recent', notice: '' };
+let selectedIngredients = loadSavedIngredients();
+let searchState = {
+  status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
+  error: null,
+  data: null,
+  searchedKey: ''
+};
+let screen = {
+  page: 'home', // 'home' | 'detail'
+  selectedSlug: null,
+  selectedBasic: null,
+  fullRecipe: null,
+  recipeLoading: false,
+  recipeError: null
+};
+let notice = '';
 
 function readThemePreference() {
   try {
     const saved = localStorage.getItem(THEME_KEY);
     return ['system', 'light', 'dark'].includes(saved) ? saved : 'system';
-  } catch { return 'system'; }
+  } catch {
+    return 'system';
+  }
 }
+
 function applyTheme() {
-  const theme = themePreference === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : themePreference;
+  const theme = themePreference === 'system'
+    ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    : themePreference;
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
   document.querySelector('#theme-color')?.setAttribute('content', theme === 'light' ? '#f3f6f3' : '#101617');
 }
 applyTheme();
 
-function load() {
+function loadSavedIngredients() {
   try {
-    const saved = localStorage.getItem(KEY);
-    if (saved !== null) { const parsed = JSON.parse(saved); return Array.isArray(parsed) ? parsed : []; }
-    const oldDrinks = JSON.parse(localStorage.getItem('chinchin.drinks.v1') || '[]');
-    const oldRatings = JSON.parse(localStorage.getItem('chinchin.ratings.v1') || '[]');
-    if (Array.isArray(oldDrinks) && oldDrinks.length) {
-      const migrated = oldDrinks.map((drink) => ({ ...drink, ratings: (Array.isArray(oldRatings) ? oldRatings : []).filter((rating) => rating.drink_id === drink.id) }));
-      localStorage.setItem(KEY, JSON.stringify(migrated));
-      return migrated;
-    }
+    const saved = localStorage.getItem(INGREDIENTS_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
     return [];
   }
-  catch { return []; }
 }
-function persist() {
-  try { localStorage.setItem(KEY, JSON.stringify(drinks)); return true; }
-  catch { notify('No hay espacio suficiente. Probá con una foto más liviana.'); return false; }
+
+function persistIngredients() {
+  try {
+    localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(selectedIngredients));
+  } catch {}
 }
-function esc(value = '') { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
-function icon(name) { return icons[name] || ''; }
-function notify(message) { screen.notice = message; render(); setTimeout(() => { if (screen.notice === message) { screen.notice = ''; render(); } }, 2600); }
-function latest(drink) { return [...(drink.ratings || [])].sort((a, b) => b.tasted_at.localeCompare(a.tasted_at))[0]; }
-function averageScore(drink) {
-  const scores = (drink.ratings || []).map((rating) => Number(rating.score)).filter(Number.isFinite);
-  return scores.length ? scores.reduce((total, score) => total + score, 0) / scores.length : null;
+
+function notify(message) {
+  notice = message;
+  render();
+  setTimeout(() => {
+    if (notice === message) {
+      notice = '';
+      render();
+    }
+  }, 2800);
 }
-function categoryClass(category) {
-  return ({ Vinos: 'type-wine', Gin: 'type-gin', Vodka: 'type-vodka', Aperitivos: 'type-aperitivo', Otros: 'type-other' })[category] || 'type-other';
+
+function esc(value = '') {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
 }
-function tastedAt(drink) { return latest(drink)?.tasted_at || drink.created_at || ''; }
-function dateLabel(value) { return value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
-function image(src, name, cls = '') {
-  return src ? `<img class="${cls}" src="${esc(src)}" alt="${esc(name)}" loading="lazy">` : `<div class="placeholder ${cls}">${icon('bottle')}<span>Sin foto</span></div>`;
+
+function icon(name) {
+  return icons[name] || '';
 }
+
+function formatIngredientName(raw) {
+  const clean = raw.trim();
+  if (!clean) return '';
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+
+function buildHaveQuery(ingredients) {
+  const tokens = new Set();
+  for (const item of ingredients) {
+    const lower = item.toLowerCase().trim();
+    if (INGREDIENT_ALIASES[lower]) {
+      INGREDIENT_ALIASES[lower].split(',').forEach((t) => tokens.add(t.trim()));
+    }
+    tokens.add(lower);
+  }
+  return Array.from(tokens).join(',');
+}
+
+async function searchCocktails() {
+  if (!selectedIngredients.length) {
+    notify('Seleccioná al menos un ingrediente para buscar');
+    return;
+  }
+
+  const haveParam = buildHaveQuery(selectedIngredients);
+  const cacheKey = selectedIngredients.slice().sort().join(',').toLowerCase();
+
+  // Return cached result if available
+  if (searchCache.has(cacheKey)) {
+    const cachedData = searchCache.get(cacheKey);
+    searchState.status = 'success';
+    searchState.error = null;
+    searchState.data = cachedData;
+    searchState.searchedKey = cacheKey;
+    updateDrinksMap(cachedData);
+    render();
+    return;
+  }
+
+  // Cancel prior request if still pending
+  if (activeSearchAbort) {
+    activeSearchAbort.abort();
+  }
+  activeSearchAbort = new AbortController();
+
+  searchState.status = 'loading';
+  searchState.error = null;
+  render();
+
+  try {
+    const url = `${API_BASE}/by-ingredients?have=${encodeURIComponent(haveParam)}&lang=es`;
+    const res = await fetch(url, { signal: activeSearchAbort.signal });
+    if (!res.ok) {
+      throw new Error(`Respuesta del servidor: ${res.status}`);
+    }
+    const data = await res.json();
+    if (!data || !data.can_make || !data.one_away) {
+      throw new Error('Estructura de respuesta inesperada');
+    }
+
+    searchCache.set(cacheKey, data);
+    updateDrinksMap(data);
+    searchState.status = 'success';
+    searchState.data = data;
+    searchState.searchedKey = cacheKey;
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    searchState.status = 'error';
+    searchState.error = 'No se pudo conectar con la API de 24cocktails. Revisá tu conexión a internet e intentá nuevamente.';
+  } finally {
+    activeSearchAbort = null;
+    render();
+  }
+}
+
+function updateDrinksMap(data) {
+  currentDrinksMap.clear();
+  if (data?.can_make?.results) {
+    data.can_make.results.forEach((d) => currentDrinksMap.set(d.slug, d));
+  }
+  if (data?.one_away?.results) {
+    data.one_away.results.forEach((d) => currentDrinksMap.set(d.slug, d));
+  }
+}
+
+async function openRecipeDetail(slug) {
+  const basic = currentDrinksMap.get(slug) || null;
+  screen.page = 'detail';
+  screen.selectedSlug = slug;
+  screen.selectedBasic = basic;
+  screen.fullRecipe = null;
+  screen.recipeLoading = false;
+  screen.recipeError = null;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (recipeCache.has(slug)) {
+    screen.fullRecipe = recipeCache.get(slug);
+    render();
+    return;
+  }
+
+  screen.recipeLoading = true;
+  render();
+
+  try {
+    const res = await fetch(`${API_BASE}/recipe/${encodeURIComponent(slug)}?lang=es`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const recipe = await res.json();
+    recipeCache.set(slug, recipe);
+    if (screen.page === 'detail' && screen.selectedSlug === slug) {
+      screen.fullRecipe = recipe;
+      screen.recipeLoading = false;
+      render();
+    }
+  } catch {
+    if (screen.page === 'detail' && screen.selectedSlug === slug) {
+      screen.recipeLoading = false;
+      screen.recipeError = 'No se pudieron descargar las cantidades exactas o instrucciones en este momento.';
+      render();
+    }
+  }
+}
+
+function addIngredient(name) {
+  const formatted = formatIngredientName(name);
+  if (!formatted) return;
+  const exists = selectedIngredients.some((item) => item.toLowerCase() === formatted.toLowerCase());
+  if (exists) {
+    notify(`"${formatted}" ya está en tu lista`);
+    return;
+  }
+  selectedIngredients.push(formatted);
+  persistIngredients();
+  render();
+}
+
+function removeIngredient(name) {
+  selectedIngredients = selectedIngredients.filter(
+    (item) => item.toLowerCase() !== name.toLowerCase()
+  );
+  persistIngredients();
+  render();
+}
+
+function toggleFrequent(name) {
+  const exists = selectedIngredients.some((item) => item.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    removeIngredient(name);
+  } else {
+    addIngredient(name);
+  }
+}
+
+function clearAllIngredients() {
+  selectedIngredients = [];
+  persistIngredients();
+  searchState.status = 'idle';
+  searchState.data = null;
+  render();
+}
+
+// ----------------------------------------------------
+// RENDER VIEWS
+// ----------------------------------------------------
 
 function render() {
-  const selected = drinks.find((drink) => drink.id === screen.drinkId);
-  app.innerHTML = `<header class="topbar"><button class="brand" data-action="home" aria-label="Ir al inicio"><span class="brand-mark">C</span><span>ChinChin<span class="gold">.</span></span></button><label class="theme-picker"><span>Tema</span><select id="theme-select" aria-label="Apariencia de ChinChin"><option value="system" ${themePreference === 'system' ? 'selected' : ''}>Sistema</option><option value="light" ${themePreference === 'light' ? 'selected' : ''}>Claro</option><option value="dark" ${themePreference === 'dark' ? 'selected' : ''}>Oscuro</option></select></label></header>
-    ${screen.notice ? `<div class="toast" role="status">${esc(screen.notice)}</div>` : ''}
-    ${selected ? detail(selected) : home()}
-    ${screen.modal ? modal() : ''}
-    ${!selected ? `<button class="fab" data-action="add" aria-label="Agregar bebida">${icon('plus')}</button>` : ''}`;
+  app.innerHTML = `
+    <header class="topbar">
+      <button class="brand" data-action="home" aria-label="Ir al inicio de ChinChin">
+        <span class="brand-mark">C</span>
+        <span>ChinChin<span class="gold">.</span></span>
+      </button>
+      <label class="theme-picker">
+        <span>Tema</span>
+        <select id="theme-select" aria-label="Apariencia de ChinChin">
+          <option value="system" ${themePreference === 'system' ? 'selected' : ''}>Sistema</option>
+          <option value="light" ${themePreference === 'light' ? 'selected' : ''}>Claro</option>
+          <option value="dark" ${themePreference === 'dark' ? 'selected' : ''}>Oscuro</option>
+        </select>
+      </label>
+    </header>
+    ${notice ? `<div class="toast" role="status">${esc(notice)}</div>` : ''}
+    ${screen.page === 'detail' ? renderDetail() : renderHome()}
+    <footer class="footer">
+      ChinChin · Recomendador de tragos · Datos por 24cocktails.com
+    </footer>
+  `;
 }
 
-function home() {
-  const categoryCounts = Object.fromEntries(CATEGORIES.map((category) => [category, drinks.filter((drink) => drink.category === category).length]));
-  const shown = drinks.filter((drink) => {
-    const rating = latest(drink);
-    const matchesOpinion = screen.opinion === 'all'
-      || (screen.opinion === 'yes' && rating?.would_drink_again === true)
-      || (screen.opinion === 'no' && rating?.would_drink_again === false)
-      || (screen.opinion === 'unrated' && !rating);
-    return (screen.category === 'Todas' || drink.category === screen.category)
-      && `${drink.name} ${drink.brand || ''} ${drink.category}`.toLocaleLowerCase().includes(screen.query.toLocaleLowerCase())
-      && matchesOpinion;
-  });
-  shown.sort((a, b) => {
-    if (screen.sort === 'high') return (averageScore(b) ?? -1) - (averageScore(a) ?? -1);
-    if (screen.sort === 'low') return (averageScore(a) ?? 11) - (averageScore(b) ?? 11);
-    return tastedAt(b).localeCompare(tastedAt(a));
-  });
-  return `<main class="home"><section class="collection"><div class="catalog-heading"><div><span class="overline">${drinks.length} ${drinks.length === 1 ? 'BEBIDA' : 'BEBIDAS'}</span><h1>Mi colección</h1></div><button class="button primary desktop-add" data-action="add">${icon('plus')} Agregar</button></div>
-      <label class="search">${icon('search')}<input id="search" type="search" placeholder="Buscar una bebida" value="${esc(screen.query)}" autocomplete="off">${screen.query ? '<button data-action="clear-search" class="clear-search" aria-label="Limpiar">×</button>' : ''}</label>
-      <div class="filters" aria-label="Filtrar por tipo"><button class="filter ${screen.category === 'Todas' ? 'active' : ''}" data-category="Todas">Todas <small>${drinks.length}</small></button>${CATEGORIES.map((category) => `<button class="filter ${categoryClass(category)} ${screen.category === category ? 'active' : ''}" data-category="${esc(category)}">${esc(category)} <small>${categoryCounts[category]}</small></button>`).join('')}</div>
-      <div class="collection-tools"><div class="opinion-filters" aria-label="Filtrar por opinión"><button class="opinion-filter ${screen.opinion === 'all' ? 'active' : ''}" data-opinion="all">Todas</button><button class="opinion-filter ${screen.opinion === 'yes' ? 'active' : ''}" data-opinion="yes">Volvería</button><button class="opinion-filter ${screen.opinion === 'no' ? 'active' : ''}" data-opinion="no">No repetiría</button><button class="opinion-filter ${screen.opinion === 'unrated' ? 'active' : ''}" data-opinion="unrated">Sin nota</button></div><label class="sort-control"><span>Ordenar</span><select id="sort-select"><option value="recent" ${screen.sort === 'recent' ? 'selected' : ''}>Última cata</option><option value="high" ${screen.sort === 'high' ? 'selected' : ''}>Mejor puntuadas</option><option value="low" ${screen.sort === 'low' ? 'selected' : ''}>Menor puntuación</option></select></label></div>
-      ${shown.length ? `<div class="result-count">${shown.length} ${shown.length === 1 ? 'botella' : 'botellas'}</div><div class="drink-grid">${shown.map(card).join('')}</div>` : `<div class="empty"><div class="empty-icon">${icon('bottle')}</div><h3>${drinks.length ? 'No hay botellas con estos filtros' : 'Empezá tu colección'}</h3><p>${drinks.length ? 'Probá otra categoría, opinión o búsqueda.' : 'Agregá una botella y contá qué te pareció.'}</p>${!drinks.length ? '<button class="button primary" data-action="add">Registrar lo que probé</button>' : ''}</div>`}
-    </section></main>`;
+function renderHome() {
+  return `
+    <main class="home">
+      <section class="catalog-heading">
+        <span class="overline">¿QUÉ HAY EN TU BARRA?</span>
+        <h1>Mis ingredientes</h1>
+        <p class="catalog-lead">
+          Seleccioná las bebidas e ingredientes que tenés en casa y descubrí qué cócteles podés preparar al instante.
+        </p>
+      </section>
+
+      <section class="ingredients-card" aria-label="Selector de ingredientes">
+        <!-- Buscador para agregar ingredientes -->
+        <form id="add-ingredient-form" class="ingredient-form" autocomplete="off">
+          <div class="ingredient-input-wrap">
+            ${icon('search')}
+            <input
+              id="ingredient-input"
+              class="ingredient-input"
+              type="text"
+              placeholder="Buscar o agregar ingrediente (ej. Campari, Menta, Miel...)"
+              maxlength="50"
+            />
+          </div>
+          <button type="submit" class="button secondary add-btn">
+            ${icon('plus')} Agregar
+          </button>
+        </form>
+
+        <!-- Ingredientes Frecuentes -->
+        <div class="frequent-section">
+          <div class="section-subtitle">Ingredientes frecuentes</div>
+          <div class="frequent-wrap" role="group" aria-label="Ingredientes frecuentes">
+            ${FREQUENT_INGREDIENTS.map((item) => {
+              const isSelected = selectedIngredients.some(
+                (selected) => selected.toLowerCase() === item.toLowerCase()
+              );
+              return `
+                <button
+                  type="button"
+                  class="frequent-chip ${isSelected ? 'selected' : ''}"
+                  data-toggle-frequent="${esc(item)}"
+                  aria-pressed="${isSelected}"
+                >
+                  <span class="chip-icon">${isSelected ? '✓' : '+'}</span>
+                  <span>${esc(item)}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Ingredientes Seleccionados (Etiquetas) -->
+        <div class="selected-tags-box">
+          <div class="selected-tags-head">
+            <span class="section-subtitle">
+              Seleccionados (${selectedIngredients.length})
+            </span>
+            ${selectedIngredients.length ? `
+              <button type="button" class="text-button" data-action="clear-all">
+                Limpiar todos
+              </button>
+            ` : ''}
+          </div>
+          <div class="tags-list">
+            ${selectedIngredients.length ? selectedIngredients.map((ing) => `
+              <span class="ingredient-tag">
+                <span>${esc(ing)}</span>
+                <button
+                  type="button"
+                  class="tag-remove"
+                  data-remove-ingredient="${esc(ing)}"
+                  aria-label="Eliminar ${esc(ing)}"
+                >×</button>
+              </span>
+            `).join('') : `
+              <p class="empty-tags-hint">
+                Todavía no seleccionaste ingredientes. Tocá los frecuentes o escribí uno arriba.
+              </p>
+            `}
+          </div>
+        </div>
+
+        <!-- Botón Buscar tragos -->
+        <div class="search-actions">
+          <button
+            type="button"
+            class="button primary main-search-btn"
+            data-action="search"
+            ${!selectedIngredients.length ? 'disabled' : ''}
+          >
+            ${icon('sparkles')} Buscar tragos
+          </button>
+        </div>
+      </section>
+
+      <!-- Resultados / Estados -->
+      <section class="results-area" aria-live="polite">
+        ${renderResultsState()}
+      </section>
+    </main>
+  `;
 }
 
-function card(drink) {
-  const rating = latest(drink);
-  const average = averageScore(drink);
-  const ratingCount = (drink.ratings || []).length;
-  const opinion = rating ? (rating.would_drink_again ? 'Volvería' : 'No repetiría') : 'Sin opinión';
-  return `<button class="drink-card" data-open="${drink.id}" aria-label="Ver ${esc(drink.name)}"><div class="card-photo">${image(drink.image_url, drink.name)}<span class="photo-category ${categoryClass(drink.category)}">${esc(drink.category)}</span></div><div class="card-copy"><h3>${esc(drink.name)}</h3><p>${esc(drink.brand || 'Marca sin especificar')}</p><div class="card-rating">${average !== null ? `${icon('star')}<strong>${average.toFixed(1)}</strong><span>/ 10</span><span class="card-opinion ${rating?.would_drink_again ? 'would-repeat' : rating ? 'would-skip' : ''}">${opinion}</span>` : '<span class="not-rated">Sin opinión todavía</span>'}</div>${ratingCount > 1 ? `<span class="tasting-count">${ratingCount} catas · promedio</span>` : ''}</div></button>`;
+function renderResultsState() {
+  if (searchState.status === 'loading') {
+    return `
+      <div class="loading-box">
+        <div class="spinner"></div>
+        <p>Buscando cócteles con tus ingredientes...</p>
+      </div>
+    `;
+  }
+
+  if (searchState.status === 'error') {
+    return `
+      <div class="empty">
+        <div class="empty-icon">${icon('alert')}</div>
+        <h3>No se pudo cargar la información</h3>
+        <p>${esc(searchState.error || 'Ocurrió un error al consultar las recetas.')}</p>
+        <button type="button" class="button secondary" data-action="search">
+          Reintentar búsqueda
+        </button>
+      </div>
+    `;
+  }
+
+  if (searchState.status === 'idle') {
+    return '';
+  }
+
+  if (searchState.status === 'success' && searchState.data) {
+    const canMake = searchState.data.can_make?.results || [];
+    const oneAway = searchState.data.one_away?.results || [];
+
+    if (!canMake.length && !oneAway.length) {
+      return `
+        <div class="empty">
+          <div class="empty-icon">${icon('bottle')}</div>
+          <h3>No encontramos tragos con esta combinación</h3>
+          <p>Probá sumando otros licores, jugos o mezcladores a tu selección.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <!-- Sección: Podés preparar -->
+      <section class="results-section" id="can-make-section">
+        <div class="results-section-header">
+          <h2>
+            <span>Podés preparar</span>
+            <small>${canMake.length}</small>
+          </h2>
+        </div>
+        ${canMake.length ? `
+          <div class="drink-grid">
+            ${canMake.map(renderCanMakeCard).join('')}
+          </div>
+        ` : `
+          <p class="section-note">
+            No encontramos recetas completas solo con estos ingredientes. ¡Revisá abajo los tragos a los que les falta solo uno!
+          </p>
+        `}
+      </section>
+
+      <!-- Sección: Te falta un ingrediente -->
+      <section class="results-section" id="one-away-section">
+        <div class="results-section-header">
+          <h2>
+            <span>Te falta un ingrediente</span>
+            <small>${oneAway.length}</small>
+          </h2>
+        </div>
+        ${oneAway.length ? `
+          <div class="drink-grid">
+            ${oneAway.map(renderOneAwayCard).join('')}
+          </div>
+        ` : `
+          <p class="section-note">
+            No encontramos tragos que estén a un solo ingrediente de distancia.
+          </p>
+        `}
+      </section>
+    `;
+  }
+
+  return '';
 }
 
-function detail(drink) {
-  const ratings = [...(drink.ratings || [])].sort((a, b) => b.tasted_at.localeCompare(a.tasted_at));
-  return `<main class="detail"><button class="back" data-action="home">${icon('back')} Mi colección</button>
-    <section class="detail-hero"><div class="detail-photo">${image(drink.image_url, drink.name)}</div><div class="detail-info"><span class="overline">${esc(drink.category)}</span><h1>${esc(drink.name)}</h1><p class="brand-name">${esc(drink.brand || 'Marca sin especificar')}</p><div class="facts">${drink.country ? `<span>${esc(drink.country)}</span>` : ''}${drink.alcohol_percentage ? `<span>${esc(drink.alcohol_percentage)}% alc.</span>` : ''}</div><div class="actions"><button class="button secondary" data-action="edit-drink">${icon('edit')} Editar</button><button class="button danger" data-action="delete-drink">${icon('trash')} Eliminar</button></div></div></section>
-    <section class="tastings"><div class="section-title"><div><span class="overline">MIS NOTAS</span><h2>Calificaciones <small>${ratings.length}</small></h2></div><button class="button secondary" data-action="add-rating">${icon('plus')} Calificar</button></div>
-      ${ratings.length ? `<div class="rating-list">${ratings.map((rating) => `<article class="rating"><div class="rating-head"><div class="rating-score">${icon('star')}<strong>${Number(rating.score).toFixed(1)}</strong><span>/ 10</span></div><time>${dateLabel(rating.tasted_at)}</time><div class="rating-actions"><button data-rating-edit="${rating.id}" aria-label="Editar calificación">${icon('edit')}</button><button data-rating-delete="${rating.id}" aria-label="Eliminar calificación">${icon('trash')}</button></div></div>${rating.comments ? `<p class="comment">“${esc(rating.comments)}”</p>` : ''}<span class="again ${rating.would_drink_again ? 'yes' : ''}">${rating.would_drink_again ? 'La volvería a tomar' : 'No la volvería a tomar'}</span></article>`).join('')}</div>` : '<div class="empty-rating">Todavía no la calificaste. <button class="text-button" data-action="add-rating">Agregar primera nota</button></div>'}
-    </section></main>`;
+function renderCanMakeCard(drink) {
+  const photoUrl = drink.photo || '';
+  const abv = drink.abv !== undefined && drink.abv !== null ? `${drink.abv}% alc.` : null;
+  const prep = drink.prep_minutes ? `${drink.prep_minutes} min` : null;
+  const ingredientsStr = Array.isArray(drink.ingredients) ? drink.ingredients.join(', ') : '';
+
+  return `
+    <article
+      class="drink-card"
+      data-open-slug="${esc(drink.slug)}"
+      role="button"
+      tabindex="0"
+      aria-label="Ver receta de ${esc(drink.name)}"
+    >
+      <div class="card-photo">
+        ${photoUrl ? `
+          <img
+            src="${esc(photoUrl)}"
+            alt="${esc(drink.name)}"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          />
+          <div class="placeholder" style="display:none;">
+            ${icon('bottle')}
+            <span>${esc(drink.name)}</span>
+          </div>
+        ` : `
+          <div class="placeholder">
+            ${icon('bottle')}
+            <span>${esc(drink.name)}</span>
+          </div>
+        `}
+        ${abv ? `<span class="photo-category">${esc(abv)}</span>` : ''}
+        ${prep ? `
+          <span class="photo-time">
+            ${icon('clock')}
+            <span>${esc(prep)}</span>
+          </span>
+        ` : ''}
+      </div>
+      <div class="card-copy">
+        <h3>${esc(drink.name)}</h3>
+        ${ingredientsStr ? `
+          <p class="card-ingredients" title="${esc(ingredientsStr)}">
+            ${esc(ingredientsStr)}
+          </p>
+        ` : ''}
+        <div class="card-footer">
+          <span class="card-link">Ver receta completa →</span>
+        </div>
+      </div>
+    </article>
+  `;
 }
 
-function modal() {
-  const isRating = screen.modal.type === 'rating';
-  const existing = screen.modal.id ? drinks.find((drink) => drink.id === screen.modal.id) : null;
-  const rating = isRating && existing ? (existing.ratings || []).find((item) => item.id === screen.modal.ratingId) : null;
-  const isNewDrink = !isRating && !existing;
-  const drinkValue = existing || { name: '', brand: '', category: 'Vinos', country: '', alcohol_percentage: '', image_url: '' };
-  const ratingValue = rating || { score: 8, comments: '', tasted_at: new Date().toISOString().slice(0, 10), would_drink_again: true };
-  const title = isRating ? (rating ? 'Editar bebida y cata' : 'Nueva cata') : (existing ? 'Editar bebida' : 'Registrar lo que probé');
-  return `<div class="modal-shade" data-action="close-shade"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><header class="modal-head"><div><span class="overline">MI BITÁCORA</span><h2 id="modal-title">${title}</h2></div><button class="close" data-action="close-modal" aria-label="Cerrar">×</button></header>
-    <form id="entry-form" data-form="${isRating ? 'rating' : 'drink'}" data-id="${existing?.id || ''}" data-rating-id="${rating?.id || ''}">
-      <section class="form-section"><span class="form-section-title">LA BEBIDA</span>${drinkFields(drinkValue)}</section>
-      ${isRating || isNewDrink ? `<section class="form-section"><span class="form-section-title">${isNewDrink ? 'LO QUE PROBÉ' : 'MI CATA'}</span>${ratingFields(ratingValue)}</section>` : ''}
-      <div class="form-actions"><button type="button" class="button secondary" data-action="close-modal">Cancelar</button><button class="button primary" type="submit">Guardar</button></div>
-    </form></section></div>`;
+function renderOneAwayCard(drink) {
+  const photoUrl = drink.photo || '';
+  const prep = drink.prep_minutes ? `${drink.prep_minutes} min` : null;
+  const missingName = drink.missing?.name || '1 ingrediente';
+
+  return `
+    <article
+      class="drink-card"
+      data-open-slug="${esc(drink.slug)}"
+      role="button"
+      tabindex="0"
+      aria-label="Ver receta de ${esc(drink.name)}"
+    >
+      <div class="card-photo">
+        ${photoUrl ? `
+          <img
+            src="${esc(photoUrl)}"
+            alt="${esc(drink.name)}"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          />
+          <div class="placeholder" style="display:none;">
+            ${icon('bottle')}
+            <span>${esc(drink.name)}</span>
+          </div>
+        ` : `
+          <div class="placeholder">
+            ${icon('bottle')}
+            <span>${esc(drink.name)}</span>
+          </div>
+        `}
+        <span class="photo-category missing-badge">Falta: ${esc(missingName)}</span>
+        ${prep ? `
+          <span class="photo-time">
+            ${icon('clock')}
+            <span>${esc(prep)}</span>
+          </span>
+        ` : ''}
+      </div>
+      <div class="card-copy">
+        <h3>${esc(drink.name)}</h3>
+        <div class="missing-info">
+          <strong>Te falta</strong>
+          <span>${esc(missingName)}</span>
+        </div>
+        <div class="card-footer">
+          <span class="card-link">Ver receta →</span>
+        </div>
+      </div>
+    </article>
+  `;
 }
 
-function drinkFields(drink) {
-  const selectedCategory = CATEGORIES.includes(drink.category) ? drink.category : 'Otros';
-  return `<div class="photo-select">${image(drink.image_url, drink.name || 'Vista previa')}<label class="button secondary">${icon('photo')} Elegir foto<input name="image_file" type="file" accept="image/*"></label><small>Una foto desde tu galería</small></div>
-    <input type="hidden" name="image_url" value="${esc(drink.image_url || '')}">
-    <label class="field">Nombre *<input name="name" value="${esc(drink.name)}" placeholder="Ej. Malbec Reserva" required maxlength="90"></label>
-    <label class="field">Marca<input name="brand" value="${esc(drink.brand || '')}" placeholder="Bodega o destilería"></label>
-    <fieldset class="category-field"><legend>Tipo</legend><input type="hidden" name="category" value="${esc(selectedCategory)}"><div class="category-pills" role="radiogroup" aria-label="Tipo de bebida">${CATEGORIES.map((category) => `<button type="button" class="category-pill ${selectedCategory === category ? 'active' : ''}" role="radio" aria-checked="${selectedCategory === category}" data-drink-category="${esc(category)}">${esc(category)}</button>`).join('')}</div></fieldset>`;
+function renderDetail() {
+  const basic = screen.selectedBasic || {};
+  const full = screen.fullRecipe || {};
+  const name = full.name || basic.name || 'Detalle del trago';
+  const photo = full.photo || basic.photo || '';
+  const abv = full.abv !== undefined && full.abv !== null ? full.abv : basic.abv;
+  const prep = full.prep_minutes || basic.prep_minutes;
+  const glass = full.glass || basic.glass;
+  const base = full.base || basic.base;
+  const method = full.method || basic.method;
+  const ice = full.ice;
+  const garnish = full.garnish;
+  const description = full.description || '';
+  const url = full.url || basic.url || '';
+
+  // Detailed ingredients list
+  let ingredientsHtml = '';
+  if (Array.isArray(full.ingredients) && full.ingredients.length) {
+    ingredientsHtml = `
+      <ul class="recipe-ingredients-list">
+        ${full.ingredients.map((ing) => `
+          <li class="ingredient-row">
+            <span class="ingredient-qty">${esc(ing.amount || 'Al gusto')}</span>
+            <span class="ingredient-name">
+              ${esc(ing.name)}${ing.optional ? ' <small>(opcional)</small>' : ''}
+            </span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  } else if (Array.isArray(basic.ingredients) && basic.ingredients.length) {
+    ingredientsHtml = `
+      <ul class="recipe-ingredients-list">
+        ${basic.ingredients.map((ing) => `
+          <li class="ingredient-row">
+            <span class="ingredient-qty">•</span>
+            <span class="ingredient-name">${esc(ing)}</span>
+          </li>
+        `).join('')}
+      </ul>
+      ${screen.recipeLoading ? `
+        <div style="margin-top: 12px; font-size: 13px; color: var(--muted); display:flex; align-items:center; gap:8px;">
+          <div class="spinner-small"></div>
+          <span>Cargando medidas exactas...</span>
+        </div>
+      ` : ''}
+    `;
+  } else {
+    ingredientsHtml = `<p style="color:var(--muted); font-size:14px;">Ingredientes no disponibles.</p>`;
+  }
+
+  // Steps
+  let stepsHtml = '';
+  if (Array.isArray(full.steps) && full.steps.length) {
+    stepsHtml = `
+      <ol class="recipe-steps-list">
+        ${full.steps.map((step) => `<li>${esc(step)}</li>`).join('')}
+      </ol>
+    `;
+  } else if (screen.recipeLoading) {
+    stepsHtml = `
+      <div style="display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px;">
+        <div class="spinner-small"></div>
+        <span>Cargando instrucciones de preparación...</span>
+      </div>
+    `;
+  } else {
+    stepsHtml = `<p style="color:var(--muted); font-size:14px;">Instrucciones no detalladas en la API.</p>`;
+  }
+
+  return `
+    <main class="detail">
+      <button class="back" data-action="back-home">
+        ${icon('back')} Volver a resultados
+      </button>
+
+      <section class="detail-hero">
+        <div class="detail-photo">
+          ${photo ? `
+            <img src="${esc(photo)}" alt="${esc(name)}" />
+          ` : `
+            <div class="placeholder">
+              ${icon('bottle')}
+              <span>Sin foto</span>
+            </div>
+          `}
+        </div>
+        <div class="detail-info">
+          <span class="overline">${base ? `BASE: ${esc(base.toUpperCase())}` : 'CÓCTEL'}</span>
+          <h1>${esc(name)}</h1>
+          ${description ? `<p class="recipe-desc">${esc(description)}</p>` : ''}
+
+          <div class="facts">
+            ${abv !== undefined && abv !== null ? `<span>${esc(abv)}% alc.</span>` : ''}
+            ${prep ? `<span>${esc(prep)} min</span>` : ''}
+            ${glass ? `<span>Vaso: ${esc(glass)}</span>` : ''}
+            ${method ? `<span>Método: ${esc(method)}</span>` : ''}
+            ${ice ? `<span>Hielo: ${esc(ice)}</span>` : ''}
+            ${garnish ? `<span>Decoración: ${esc(garnish)}</span>` : ''}
+          </div>
+
+          ${url ? `
+            <div class="recipe-actions">
+              <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="button secondary">
+                ${icon('external')} Ver receta en 24cocktails.com
+              </a>
+            </div>
+          ` : ''}
+        </div>
+      </section>
+
+      <section class="detail-content">
+        <div class="detail-block">
+          <h2>Ingredientes</h2>
+          ${ingredientsHtml}
+        </div>
+        <div class="detail-block">
+          <h2>Preparación</h2>
+          ${stepsHtml}
+          ${url ? `
+            <div class="recipe-attribution">
+              <small>Receta verificada de coctelería internacional provista por 24cocktails.com</small>
+            </div>
+          ` : ''}
+        </div>
+      </section>
+    </main>
+  `;
 }
 
-function ratingFields(rating) {
-  return `<label class="field score-field">Puntuación <strong><output id="score-output">${esc(rating.score)}</output> / 10</strong><input name="score" type="range" min="1" max="10" value="${esc(rating.score)}"></label>
-    <label class="field">Fecha en que la probé<input name="tasted_at" type="date" value="${esc(rating.tasted_at)}" required></label>
-    <label class="field">Comentario personal<textarea name="comments" rows="4" maxlength="1000" placeholder="Aroma, sabor, ocasión…">${esc(rating.comments || '')}</textarea></label>
-    <label class="again-choice"><input name="would_drink_again" type="checkbox" ${rating.would_drink_again ? 'checked' : ''}><span>La volvería a tomar</span></label>`;
-}
+// ----------------------------------------------------
+// EVENT LISTENERS
+// ----------------------------------------------------
 
-async function compress(file) {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 900 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas'); canvas.width = Math.round(bitmap.width * scale); canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close();
-  return canvas.toDataURL('image/jpeg', 0.76);
-}
-
-app.addEventListener('click', async (event) => {
-  const target = event.target.closest('[data-action], [data-open], [data-category], [data-opinion], [data-drink-category], [data-rating-edit], [data-rating-delete]');
+app.addEventListener('click', (event) => {
+  const target = event.target.closest(
+    '[data-action], [data-toggle-frequent], [data-remove-ingredient], [data-open-slug]'
+  );
   if (!target) return;
-  if (target.dataset.open) { screen.drinkId = target.dataset.open; render(); return; }
-  if (target.dataset.category) { screen.category = target.dataset.category; render(); return; }
-  if (target.dataset.opinion) { screen.opinion = target.dataset.opinion; render(); return; }
-  if (target.dataset.drinkCategory) {
-    const form = target.closest('form');
-    form.querySelector('[name="category"]').value = target.dataset.drinkCategory;
-    form.querySelectorAll('[data-drink-category]').forEach((pill) => {
-      const active = pill === target; pill.classList.toggle('active', active); pill.setAttribute('aria-checked', String(active));
-    });
+
+  if (target.dataset.openSlug) {
+    openRecipeDetail(target.dataset.openSlug);
     return;
   }
-  if (target.dataset.ratingEdit || target.dataset.ratingDelete) {
-    const drink = drinks.find((item) => item.id === screen.drinkId); const ratingId = target.dataset.ratingEdit || target.dataset.ratingDelete;
-    if (target.dataset.ratingEdit) { screen.modal = { type: 'rating', id: drink.id, ratingId }; render(); }
-    else if (confirm('¿Eliminar esta calificación?')) { drink.ratings = drink.ratings.filter((item) => item.id !== ratingId); persist(); render(); }
+
+  if (target.dataset.toggleFrequent) {
+    toggleFrequent(target.dataset.toggleFrequent);
     return;
   }
+
+  if (target.dataset.removeIngredient) {
+    removeIngredient(target.dataset.removeIngredient);
+    return;
+  }
+
   switch (target.dataset.action) {
-    case 'home': screen.page = 'home'; screen.drinkId = null; screen.modal = null; render(); break;
-    case 'add': screen.modal = { type: 'drink' }; render(); break;
-    case 'edit-drink': screen.modal = { type: 'drink', id: screen.drinkId }; render(); break;
-    case 'add-rating': screen.modal = { type: 'rating', id: screen.drinkId }; render(); break;
-    case 'close-modal': screen.modal = null; render(); break;
-    case 'close-shade': if (event.target === target) { screen.modal = null; render(); } break;
-    case 'clear-search': screen.query = ''; render(); break;
-    case 'delete-drink': {
-      const drink = drinks.find((item) => item.id === screen.drinkId);
-      if (confirm(`¿Eliminar “${drink.name}” y sus calificaciones?`)) { drinks = drinks.filter((item) => item.id !== drink.id); persist(); screen.drinkId = null; render(); }
+    case 'home':
+    case 'back-home':
+      screen.page = 'home';
+      screen.selectedSlug = null;
+      render();
       break;
+    case 'search':
+      searchCocktails();
+      break;
+    case 'clear-all':
+      clearAllIngredients();
+      break;
+  }
+});
+
+app.addEventListener('submit', (event) => {
+  if (event.target.id === 'add-ingredient-form') {
+    event.preventDefault();
+    const input = document.querySelector('#ingredient-input');
+    if (!input) return;
+    const value = input.value.trim();
+    if (value) {
+      addIngredient(value);
+      input.value = '';
     }
   }
 });
 
-app.addEventListener('input', (event) => {
-  if (event.target.id === 'search') { screen.query = event.target.value; const cursor = event.target.selectionStart; render(); const input = document.querySelector('#search'); input.focus(); input.setSelectionRange(cursor, cursor); }
-  if (event.target.name === 'score') { const output = document.querySelector('#score-output'); if (output) output.value = event.target.value; }
-});
-
-app.addEventListener('change', async (event) => {
+app.addEventListener('change', (event) => {
   if (event.target.id === 'theme-select') {
     themePreference = event.target.value;
-    try { localStorage.setItem(THEME_KEY, themePreference); } catch {}
-    applyTheme(); render(); return;
+    try {
+      localStorage.setItem(THEME_KEY, themePreference);
+    } catch {}
+    applyTheme();
+    render();
   }
-  if (event.target.id === 'sort-select') { screen.sort = event.target.value; render(); return; }
-  if (event.target.name !== 'image_file') return;
-  const file = event.target.files?.[0]; if (!file) return;
-  if (!file.type.startsWith('image/')) { notify('Elegí un archivo de imagen.'); return; }
-  try {
-    const data = await compress(file); const hidden = document.querySelector('[name="image_url"]'); hidden.value = data;
-    const preview = document.querySelector('.photo-select img, .photo-select .placeholder');
-    if (preview) { const imageElement = document.createElement('img'); imageElement.src = data; imageElement.alt = 'Vista previa'; imageElement.className = 'selected-photo'; preview.replaceWith(imageElement); }
-  } catch { notify('No se pudo abrir esa imagen.'); }
 });
 
-app.addEventListener('submit', async (event) => {
-  if (event.target.id !== 'entry-form') return;
-  event.preventDefault(); const form = event.target; const data = new FormData(form); const id = form.dataset.id;
-  if (form.dataset.form === 'drink') {
-    const existing = id ? drinks.find((drink) => drink.id === id) : null;
-    const drink = { id: existing?.id || crypto.randomUUID(), name: String(data.get('name')).trim(), brand: String(data.get('brand')).trim(), category: data.get('category'), country: existing?.country || '', alcohol_percentage: existing?.alcohol_percentage || '', image_url: data.get('image_url') || '', created_at: existing?.created_at || new Date().toISOString(), ratings: existing?.ratings || [] };
-    if (!drink.name) return;
-    if (!existing && data.has('score') && data.has('tasted_at')) {
-      drink.ratings.unshift({ id: crypto.randomUUID(), score: Number(data.get('score')), comments: String(data.get('comments')).trim(), tasted_at: data.get('tasted_at'), would_drink_again: data.get('would_drink_again') === 'on', created_at: new Date().toISOString() });
+// Accessibility: Allow opening a card with Enter or Space
+app.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    const card = event.target.closest('.drink-card[data-open-slug]');
+    if (card && event.target === card) {
+      event.preventDefault();
+      openRecipeDetail(card.dataset.openSlug);
     }
-    if (existing) drinks = drinks.map((item) => item.id === id ? drink : item); else drinks.unshift(drink);
-    if (persist()) { screen.modal = null; screen.drinkId = drink.id; notify(existing ? 'Bebida actualizada' : 'Bebida y cata guardadas'); }
-  } else {
-    const current = drinks.find((item) => item.id === id); const ratingId = form.dataset.ratingId;
-    const drink = { ...current, name: String(data.get('name')).trim(), brand: String(data.get('brand')).trim(), category: data.get('category'), image_url: data.get('image_url') || '', ratings: [...(current.ratings || [])] };
-    const oldRating = drink.ratings.find((item) => item.id === ratingId);
-    const rating = { id: ratingId || crypto.randomUUID(), score: Number(data.get('score')), comments: String(data.get('comments')).trim(), tasted_at: data.get('tasted_at'), would_drink_again: data.get('would_drink_again') === 'on', created_at: oldRating?.created_at || new Date().toISOString() };
-    if (!drink.name) return;
-    if (ratingId) drink.ratings = drink.ratings.map((item) => item.id === ratingId ? { ...item, ...rating } : item); else drink.ratings.unshift(rating);
-    drinks = drinks.map((item) => item.id === id ? drink : item);
-    if (persist()) { screen.modal = null; notify('Calificación guardada'); }
   }
-  render();
 });
 
-window.addEventListener('online', render);
-window.addEventListener('offline', render);
-matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => { if (themePreference === 'system') applyTheme(); });
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=8').catch(() => {}));
+matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
+  if (themePreference === 'system') applyTheme();
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js?v=9').catch(() => {});
+  });
+}
+
+// Initial render
 render();
