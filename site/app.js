@@ -2,11 +2,47 @@ const THEME_KEY = 'chinchin.theme.v1';
 const INGREDIENTS_KEY = 'chinchin.ingredients.v1';
 const API_BASE = 'https://24cocktails.com/api/v1';
 
-const FREQUENT_INGREDIENTS = [
-  'Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila',
-  'Lima', 'Limón', 'Naranja', 'Coca-Cola', 'Tónica', 'Soda'
+// Categorías del catálogo de ingredientes
+const INGREDIENT_CATEGORIES = [
+  { id: 'frecuentes', label: '⭐ Frecuentes' },
+  { id: 'espirituosas', label: '🥃 Espirituosas' },
+  { id: 'licores', label: '🍷 Licores & Aperitivos' },
+  { id: 'mezcladores', label: '🥤 Mezcladores' },
+  { id: 'frutas', label: '🍋 Frutas & Cítricos' },
+  { id: 'basicos', label: '🌿 Básicos & Especias' }
 ];
 
+const INGREDIENT_CATALOG = {
+  frecuentes: [
+    'Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila',
+    'Lima', 'Limón', 'Naranja', 'Coca-Cola', 'Tónica', 'Soda'
+  ],
+  espirituosas: [
+    'Gin', 'Vodka', 'Ron', 'Whisky', 'Tequila', 'Fernet',
+    'Bourbon', 'Scotch', 'Mezcal', 'Brandy', 'Cognac', 'Pisco'
+  ],
+  licores: [
+    'Campari', 'Vermut dulce', 'Vermut seco', 'Aperol',
+    'Triple Sec', 'Cointreau', 'Licor de café', 'Kahlúa',
+    'Baileys', 'Amaretto', 'Blue Curaçao', 'Cynar',
+    'Jägermeister', 'Limoncello', 'Chartreuse'
+  ],
+  mezcladores: [
+    'Tónica', 'Coca-Cola', 'Soda', 'Ginger Beer', 'Ginger Ale',
+    'Sprite / Lima-Limón', 'Jugo de arándano', 'Jugo de tomate',
+    'Agua con gas', 'Red Bull'
+  ],
+  frutas: [
+    'Lima', 'Limón', 'Naranja', 'Pomelo', 'Menta',
+    'Ananá', 'Frutilla', 'Manzana', 'Pepino', 'Maracuyá'
+  ],
+  basicos: [
+    'Almíbar / Azúcar', 'Miel', 'Angostura Bitters', 'Clara de huevo',
+    'Granadina', 'Sal', 'Café', 'Canela', 'Jengibre', 'Tabasco'
+  ]
+};
+
+// Aliases para la taxonomía de la API de 24cocktails
 const INGREDIENT_ALIASES = {
   'ron': 'rum,white_rum',
   'rum': 'rum,white_rum',
@@ -23,6 +59,8 @@ const INGREDIENT_ALIASES = {
   'azúcar': 'sugar,sugar_syrup',
   'almibar': 'sugar_syrup',
   'almíbar': 'sugar_syrup',
+  'almíbar / azúcar': 'sugar_syrup,sugar',
+  'almibar / azucar': 'sugar_syrup,sugar',
   'jarabe': 'sugar_syrup',
   'miel': 'honey',
   'cafe': 'coffee',
@@ -43,11 +81,15 @@ const INGREDIENT_ALIASES = {
   'ananá': 'pineapple,pineapple_juice',
   'piña': 'pineapple,pineapple_juice',
   'manzana': 'apple',
+  'pepino': 'cucumber',
+  'maracuya': 'passion_fruit',
+  'maracuyá': 'passion_fruit',
   'huevo': 'egg',
   'clara de huevo': 'egg_white',
   'canela': 'cinnamon',
   'jengibre': 'ginger',
   'ginger beer': 'ginger_beer',
+  'ginger ale': 'ginger_ale',
   'sal': 'salt',
   'soda': 'soda,soda_water',
   'agua con gas': 'soda,soda_water',
@@ -58,21 +100,27 @@ const INGREDIENT_ALIASES = {
   'coca cola': 'cola',
   'coca-cola': 'cola',
   'coca': 'cola',
+  'sprite / lima-limón': 'lemonade',
+  'jugo de arándano': 'cranberry_juice',
+  'jugo de arandano': 'cranberry_juice',
+  'jugo de tomate': 'tomato_juice',
   'jugo de lima': 'lime_juice',
   'jugo de limon': 'lemon_juice',
   'jugo de limón': 'lemon_juice',
   'jugo de naranja': 'orange_juice',
   'jugo de pomelo': 'grapefruit_juice',
-  'jugo de arandano': 'cranberry_juice',
-  'jugo de arándano': 'cranberry_juice',
+  'angostura bitters': 'angostura,bitters',
+  'angostura': 'angostura,bitters',
+  'bitters': 'angostura,bitters',
   'triple sec': 'triple_sec',
   'cointreau': 'cointreau,triple_sec',
   'aperol': 'aperol,campari',
   'campari': 'campari',
-  'vermut': 'sweet_vermouth,dry_vermouth',
-  'vermouth': 'sweet_vermouth,dry_vermouth',
   'vermut dulce': 'sweet_vermouth',
   'vermut seco': 'dry_vermouth',
+  'vermut': 'sweet_vermouth,dry_vermouth',
+  'vermouth': 'sweet_vermouth,dry_vermouth',
+  'granadina': 'grenadine',
   'champan': 'sparkling_wine',
   'champán': 'sparkling_wine',
   'espumante': 'sparkling_wine',
@@ -83,10 +131,17 @@ const INGREDIENT_ALIASES = {
   'kahlúa': 'coffee_liqueur',
   'baileys': 'irish_cream',
   'amaretto': 'amaretto',
+  'blue curacao': 'blue_curacao,triple_sec',
+  'blue curaçao': 'blue_curacao,triple_sec',
+  'cynar': 'cynar,amaro',
+  'jagermeister': 'herbal_liqueur',
+  'jägermeister': 'herbal_liqueur',
+  'limoncello': 'limoncello',
+  'chartreuse': 'herbal_liqueur',
   'whisky': 'whiskey',
   'whiskey': 'whiskey',
-  'bourbon': 'bourbon',
-  'scotch': 'scotch',
+  'bourbon': 'bourbon,whiskey',
+  'scotch': 'scotch,whiskey',
   'gin': 'gin',
   'ginebra': 'gin',
   'vodka': 'vodka',
@@ -99,6 +154,23 @@ const INGREDIENT_ALIASES = {
   'pisco': 'pisco'
 };
 
+// Índice plano para autocompletado rápido
+const AUTOCOMPLETE_INDEX = [];
+(function buildAutocompleteIndex() {
+  const seen = new Set();
+  for (const [catId, items] of Object.entries(INGREDIENT_CATALOG)) {
+    const catObj = INGREDIENT_CATEGORIES.find((c) => c.id === catId);
+    const catLabel = catObj ? catObj.label.replace(/^[^\s]+\s*/, '') : '';
+    for (const name of items) {
+      const lower = name.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        AUTOCOMPLETE_INDEX.push({ name, category: catLabel });
+      }
+    }
+  }
+})();
+
 const icons = {
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
@@ -108,28 +180,42 @@ const icons = {
   external: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>',
   alert: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
   check: '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
-  sparkles: '<svg viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>'
+  sparkles: '<svg viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>',
+  filter: '<svg viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>'
 };
 
 const app = document.querySelector('#app');
 
-// Caches to avoid duplicate requests
+// Caches en memoria para evitar peticiones duplicadas
 const searchCache = new Map();
 const recipeCache = new Map();
 let currentDrinksMap = new Map();
 
-// In-flight request controller
+// Control de peticiones concurrentes
 let activeSearchAbort = null;
 
-// Application state
+// Estado principal de la aplicación
 let themePreference = readThemePreference();
 let selectedIngredients = loadSavedIngredients();
+let activeCategoryTab = 'frecuentes';
 let searchState = {
   status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
   error: null,
   data: null,
   searchedKey: ''
 };
+
+// Filtros y pestañas dentro de los resultados
+let resultsActiveTab = 'can_make'; // 'can_make' | 'one_away'
+let filterBase = 'all'; // 'all' | 'gin' | 'vodka' | 'rum' | 'whiskey' | 'tequila' | 'other'
+let filterMissing = 'all';
+let filterQuery = '';
+
+// Autocomplete state
+let autocompleteSuggestions = [];
+let autocompleteHighlightIndex = -1;
+
+// Detalle
 let screen = {
   page: 'home', // 'home' | 'detail'
   selectedSlug: null,
@@ -184,7 +270,7 @@ function notify(message) {
       notice = '';
       render();
     }
-  }, 2800);
+  }, 2600);
 }
 
 function esc(value = '') {
@@ -219,7 +305,7 @@ function buildHaveQuery(ingredients) {
   return Array.from(tokens).join(',');
 }
 
-async function searchCocktails() {
+async function searchCocktails(keepTab = false) {
   if (!selectedIngredients.length) {
     notify('Seleccioná al menos un ingrediente para buscar');
     return;
@@ -228,7 +314,7 @@ async function searchCocktails() {
   const haveParam = buildHaveQuery(selectedIngredients);
   const cacheKey = selectedIngredients.slice().sort().join(',').toLowerCase();
 
-  // Return cached result if available
+  // Si ya tenemos en caché
   if (searchCache.has(cacheKey)) {
     const cachedData = searchCache.get(cacheKey);
     searchState.status = 'success';
@@ -236,11 +322,14 @@ async function searchCocktails() {
     searchState.data = cachedData;
     searchState.searchedKey = cacheKey;
     updateDrinksMap(cachedData);
+    if (!keepTab) {
+      resultsActiveTab = cachedData.can_make?.results?.length ? 'can_make' : 'one_away';
+    }
     render();
     return;
   }
 
-  // Cancel prior request if still pending
+  // Cancelar petición anterior si estuviera corriendo
   if (activeSearchAbort) {
     activeSearchAbort.abort();
   }
@@ -266,10 +355,13 @@ async function searchCocktails() {
     searchState.status = 'success';
     searchState.data = data;
     searchState.searchedKey = cacheKey;
+    if (!keepTab) {
+      resultsActiveTab = data.can_make?.results?.length ? 'can_make' : 'one_away';
+    }
   } catch (err) {
     if (err.name === 'AbortError') return;
     searchState.status = 'error';
-    searchState.error = 'No se pudo conectar con la API de 24cocktails. Revisá tu conexión a internet e intentá nuevamente.';
+    searchState.error = 'No se pudo conectar con la API de 24cocktails. Revisá tu conexión e intentá de nuevo.';
   } finally {
     activeSearchAbort = null;
     render();
@@ -325,7 +417,7 @@ async function openRecipeDetail(slug) {
   }
 }
 
-function addIngredient(name) {
+function addIngredient(name, autoSearch = false) {
   const formatted = formatIngredientName(name);
   if (!formatted) return;
   const exists = selectedIngredients.some((item) => item.toLowerCase() === formatted.toLowerCase());
@@ -335,7 +427,14 @@ function addIngredient(name) {
   }
   selectedIngredients.push(formatted);
   persistIngredients();
-  render();
+  autocompleteSuggestions = [];
+  autocompleteHighlightIndex = -1;
+
+  if (autoSearch) {
+    searchCocktails(true);
+  } else {
+    render();
+  }
 }
 
 function removeIngredient(name) {
@@ -360,7 +459,49 @@ function clearAllIngredients() {
   persistIngredients();
   searchState.status = 'idle';
   searchState.data = null;
+  filterMissing = 'all';
+  filterBase = 'all';
+  filterQuery = '';
   render();
+}
+
+// ----------------------------------------------------
+// FILTRADO DE RESULTADOS
+// ----------------------------------------------------
+
+function filterDrinksList(drinks) {
+  if (!drinks) return [];
+  return drinks.filter((drink) => {
+    // Filtro por base de alcohol
+    if (filterBase !== 'all') {
+      const drinkBase = (drink.base || '').toLowerCase();
+      if (filterBase === 'other') {
+        if (['gin', 'vodka', 'rum', 'whiskey', 'tequila'].includes(drinkBase)) {
+          return false;
+        }
+      } else if (drinkBase !== filterBase) {
+        return false;
+      }
+    }
+
+    // Filtro por ingrediente faltante (solo aplica en one_away)
+    if (filterMissing !== 'all' && drink.missing) {
+      const missingName = drink.missing.name || '';
+      if (missingName !== filterMissing) {
+        return false;
+      }
+    }
+
+    // Filtro de texto por nombre o ingrediente
+    if (filterQuery.trim()) {
+      const q = filterQuery.toLowerCase();
+      const matchName = (drink.name || '').toLowerCase().includes(q);
+      const matchIngredients = Array.isArray(drink.ingredients) && drink.ingredients.some((ing) => ing.toLowerCase().includes(q));
+      if (!matchName && !matchIngredients) return false;
+    }
+
+    return true;
+  });
 }
 
 // ----------------------------------------------------
@@ -392,18 +533,21 @@ function render() {
 }
 
 function renderHome() {
+  const currentCategoryItems = INGREDIENT_CATALOG[activeCategoryTab] || INGREDIENT_CATALOG.frecuentes;
+  const isChangedSinceSearch = searchState.status === 'success' && searchState.searchedKey !== selectedIngredients.slice().sort().join(',').toLowerCase();
+
   return `
     <main class="home">
       <section class="catalog-heading">
         <span class="overline">¿QUÉ HAY EN TU BARRA?</span>
         <h1>Mis ingredientes</h1>
         <p class="catalog-lead">
-          Seleccioná las bebidas e ingredientes que tenés en casa y descubrí qué cócteles podés preparar al instante.
+          Elegí o buscá las bebidas e ingredientes que tenés disponibles. Te recomendaremos qué cócteles podés armar al instante.
         </p>
       </section>
 
       <section class="ingredients-card" aria-label="Selector de ingredientes">
-        <!-- Buscador para agregar ingredientes -->
+        <!-- Buscador con autocompletado en vivo -->
         <form id="add-ingredient-form" class="ingredient-form" autocomplete="off">
           <div class="ingredient-input-wrap">
             ${icon('search')}
@@ -411,20 +555,50 @@ function renderHome() {
               id="ingredient-input"
               class="ingredient-input"
               type="text"
-              placeholder="Buscar o agregar ingrediente (ej. Campari, Menta, Miel...)"
+              placeholder="Buscar o agregar ingrediente (ej. Campari, Menta, Miel, Bourbon...)"
               maxlength="50"
+              autocomplete="off"
             />
+            ${autocompleteSuggestions.length ? `
+              <ul class="autocomplete-dropdown" id="autocomplete-list" role="listbox">
+                ${autocompleteSuggestions.map((item, idx) => `
+                  <li
+                    class="autocomplete-item ${idx === autocompleteHighlightIndex ? 'highlighted' : ''}"
+                    role="option"
+                    data-autocomplete-add="${esc(item.name)}"
+                  >
+                    <span>${esc(item.name)}</span>
+                    <span class="autocomplete-category">${esc(item.category)}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            ` : ''}
           </div>
           <button type="submit" class="button secondary add-btn">
             ${icon('plus')} Agregar
           </button>
         </form>
 
-        <!-- Ingredientes Frecuentes -->
-        <div class="frequent-section">
-          <div class="section-subtitle">Ingredientes frecuentes</div>
-          <div class="frequent-wrap" role="group" aria-label="Ingredientes frecuentes">
-            ${FREQUENT_INGREDIENTS.map((item) => {
+        <!-- Explorador de Ingredientes por Categoría -->
+        <div class="category-tabs-container">
+          <div class="section-subtitle">Explorar por categoría</div>
+          <div class="category-tabs" role="tablist" aria-label="Categorías de ingredientes">
+            ${INGREDIENT_CATEGORIES.map((cat) => `
+              <button
+                type="button"
+                class="category-tab ${activeCategoryTab === cat.id ? 'active' : ''}"
+                role="tab"
+                aria-selected="${activeCategoryTab === cat.id}"
+                data-select-category="${cat.id}"
+              >
+                ${esc(cat.label)}
+              </button>
+            `).join('')}
+          </div>
+
+          <!-- Chips de la categoría activa -->
+          <div class="frequent-wrap" role="group" aria-label="Ingredientes">
+            ${currentCategoryItems.map((item) => {
               const isSelected = selectedIngredients.some(
                 (selected) => selected.toLowerCase() === item.toLowerCase()
               );
@@ -468,7 +642,7 @@ function renderHome() {
               </span>
             `).join('') : `
               <p class="empty-tags-hint">
-                Todavía no seleccionaste ingredientes. Tocá los frecuentes o escribí uno arriba.
+                Todavía no agregaste ingredientes. Tocá las opciones de arriba o escribí en el buscador.
               </p>
             `}
           </div>
@@ -482,8 +656,14 @@ function renderHome() {
             data-action="search"
             ${!selectedIngredients.length ? 'disabled' : ''}
           >
-            ${icon('sparkles')} Buscar tragos
+            ${icon('sparkles')}
+            ${selectedIngredients.length ? `Buscar tragos (${selectedIngredients.length} ingredientes)` : 'Buscar tragos'}
           </button>
+          ${isChangedSinceSearch ? `
+            <small style="color:var(--gold); text-align:center; font-size:12px;">
+              Modificaste tus ingredientes. Tocá "Buscar tragos" para actualizar los resultados.
+            </small>
+          ` : ''}
         </div>
       </section>
 
@@ -500,7 +680,7 @@ function renderResultsState() {
     return `
       <div class="loading-box">
         <div class="spinner"></div>
-        <p>Buscando cócteles con tus ingredientes...</p>
+        <p>Buscando cócteles con tus ingredientes en 24cocktails...</p>
       </div>
     `;
   }
@@ -523,57 +703,145 @@ function renderResultsState() {
   }
 
   if (searchState.status === 'success' && searchState.data) {
-    const canMake = searchState.data.can_make?.results || [];
-    const oneAway = searchState.data.one_away?.results || [];
+    const rawCanMake = searchState.data.can_make?.results || [];
+    const rawOneAway = searchState.data.one_away?.results || [];
 
-    if (!canMake.length && !oneAway.length) {
+    if (!rawCanMake.length && !rawOneAway.length) {
       return `
         <div class="empty">
           <div class="empty-icon">${icon('bottle')}</div>
           <h3>No encontramos tragos con esta combinación</h3>
-          <p>Probá sumando otros licores, jugos o mezcladores a tu selección.</p>
+          <p>Probá sumando otros licores, jugos o mezcladores a tu selección de barra.</p>
         </div>
       `;
     }
 
-    return `
-      <!-- Sección: Podés preparar -->
-      <section class="results-section" id="can-make-section">
-        <div class="results-section-header">
-          <h2>
-            <span>Podés preparar</span>
-            <small>${canMake.length}</small>
-          </h2>
-        </div>
-        ${canMake.length ? `
-          <div class="drink-grid">
-            ${canMake.map(renderCanMakeCard).join('')}
-          </div>
-        ` : `
-          <p class="section-note">
-            No encontramos recetas completas solo con estos ingredientes. ¡Revisá abajo los tragos a los que les falta solo uno!
-          </p>
-        `}
-      </section>
+    // Calcular frecuencias de ingredientes faltantes para el filtro
+    const missingCounts = {};
+    for (const d of rawOneAway) {
+      const name = d.missing?.name || 'Otro';
+      missingCounts[name] = (missingCounts[name] || 0) + 1;
+    }
+    const sortedMissing = Object.entries(missingCounts).sort((a, b) => b[1] - a[1]);
 
-      <!-- Sección: Te falta un ingrediente -->
-      <section class="results-section" id="one-away-section">
-        <div class="results-section-header">
-          <h2>
-            <span>Te falta un ingrediente</span>
-            <small>${oneAway.length}</small>
-          </h2>
+    // Aplicar filtros a cada lista
+    const filteredCanMake = filterDrinksList(rawCanMake);
+    const filteredOneAway = filterDrinksList(rawOneAway);
+
+    return `
+      <!-- Pestañas de Resultados -->
+      <nav class="results-tabs" role="tablist" aria-label="Tipos de resultados">
+        <button
+          type="button"
+          class="results-tab ${resultsActiveTab === 'can_make' ? 'active' : ''}"
+          role="tab"
+          aria-selected="${resultsActiveTab === 'can_make'}"
+          data-results-tab="can_make"
+        >
+          <span>Podés preparar</span>
+          <small>${rawCanMake.length}</small>
+        </button>
+        <button
+          type="button"
+          class="results-tab ${resultsActiveTab === 'one_away' ? 'active' : ''}"
+          role="tab"
+          aria-selected="${resultsActiveTab === 'one_away'}"
+          data-results-tab="one_away"
+        >
+          <span>Te falta 1 ingrediente</span>
+          <small>${rawOneAway.length}</small>
+        </button>
+      </nav>
+
+      <!-- Barra de Filtros secundarios (Base, Búsqueda, Faltante) -->
+      <div class="results-filter-bar">
+        <div class="filter-group">
+          <!-- Búsqueda en resultados -->
+          <div class="drink-search-wrap">
+            ${icon('search')}
+            <input
+              type="text"
+              class="drink-search-input"
+              id="drink-search-input"
+              placeholder="Filtrar por nombre o ingrediente..."
+              value="${esc(filterQuery)}"
+            />
+          </div>
+
+          <!-- Filtro por Base Spirit -->
+          <select class="filter-select" id="base-filter-select" aria-label="Filtrar por bebida base">
+            <option value="all" ${filterBase === 'all' ? 'selected' : ''}>Todas las bases</option>
+            <option value="gin" ${filterBase === 'gin' ? 'selected' : ''}>Gin</option>
+            <option value="vodka" ${filterBase === 'vodka' ? 'selected' : ''}>Vodka</option>
+            <option value="rum" ${filterBase === 'rum' ? 'selected' : ''}>Ron</option>
+            <option value="whiskey" ${filterBase === 'whiskey' ? 'selected' : ''}>Whisky</option>
+            <option value="tequila" ${filterBase === 'tequila' ? 'selected' : ''}>Tequila</option>
+            <option value="brandy" ${filterBase === 'brandy' ? 'selected' : ''}>Brandy / Coñac</option>
+            <option value="other" ${filterBase === 'other' ? 'selected' : ''}>Otras / Aperitivos</option>
+          </select>
         </div>
-        ${oneAway.length ? `
+
+        ${resultsActiveTab === 'one_away' && sortedMissing.length ? `
+          <!-- Filtro por Ingrediente Faltante -->
+          <select class="filter-select" id="missing-filter-select" aria-label="Filtrar por lo que te falta">
+            <option value="all" ${filterMissing === 'all' ? 'selected' : ''}>Cualquier faltante</option>
+            ${sortedMissing.slice(0, 15).map(([name, count]) => `
+              <option value="${esc(name)}" ${filterMissing === name ? 'selected' : ''}>
+                Falta: ${esc(name)} (${count})
+              </option>
+            `).join('')}
+          </select>
+        ` : ''}
+      </div>
+
+      <!-- Contenido de la pestaña activa -->
+      ${resultsActiveTab === 'can_make' ? `
+        ${filteredCanMake.length ? `
           <div class="drink-grid">
-            ${oneAway.map(renderOneAwayCard).join('')}
+            ${filteredCanMake.map(renderCanMakeCard).join('')}
           </div>
         ` : `
-          <p class="section-note">
-            No encontramos tragos que estén a un solo ingrediente de distancia.
-          </p>
+          <div class="empty">
+            <p style="margin:0; color:var(--muted);">
+              ${rawCanMake.length ? 'Ningún trago coincide con los filtros aplicados.' : 'No encontramos cócteles que puedas preparar con exactamente estos ingredientes. ¡Revisá la pestaña "Te falta 1 ingrediente" para ver cuáles podés desbloquear!'}
+            </p>
+          </div>
         `}
-      </section>
+      ` : `
+        <!-- Pestaña Te falta 1 ingrediente -->
+        ${sortedMissing.length > 1 ? `
+          <div class="missing-filter-scroll" role="group" aria-label="Filtro rápido de faltantes">
+            <button
+              type="button"
+              class="missing-filter-chip ${filterMissing === 'all' ? 'active' : ''}"
+              data-set-missing-filter="all"
+            >
+              Todos los faltantes
+            </button>
+            ${sortedMissing.slice(0, 8).map(([name, count]) => `
+              <button
+                type="button"
+                class="missing-filter-chip ${filterMissing === name ? 'active' : ''}"
+                data-set-missing-filter="${esc(name)}"
+              >
+                ${esc(name)} (${count})
+              </button>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${filteredOneAway.length ? `
+          <div class="drink-grid">
+            ${filteredOneAway.map(renderOneAwayCard).join('')}
+          </div>
+        ` : `
+          <div class="empty">
+            <p style="margin:0; color:var(--muted);">
+              Ningún trago coincide con los filtros aplicados.
+            </p>
+          </div>
+        `}
+      `}
     `;
   }
 
@@ -677,7 +945,17 @@ function renderOneAwayCard(drink) {
       <div class="card-copy">
         <h3>${esc(drink.name)}</h3>
         <div class="missing-info">
-          <strong>Te falta</strong>
+          <div class="missing-row">
+            <strong>Te falta</strong>
+            <button
+              type="button"
+              class="add-missing-btn"
+              data-add-missing="${esc(missingName)}"
+              title="Agregar ${esc(missingName)} a mis ingredientes"
+            >
+              + Tengo esto
+            </button>
+          </div>
           <span>${esc(missingName)}</span>
         </div>
         <div class="card-footer">
@@ -703,7 +981,7 @@ function renderDetail() {
   const description = full.description || '';
   const url = full.url || basic.url || '';
 
-  // Detailed ingredients list
+  // Lista detallada de ingredientes
   let ingredientsHtml = '';
   if (Array.isArray(full.ingredients) && full.ingredients.length) {
     ingredientsHtml = `
@@ -739,7 +1017,7 @@ function renderDetail() {
     ingredientsHtml = `<p style="color:var(--muted); font-size:14px;">Ingredientes no disponibles.</p>`;
   }
 
-  // Steps
+  // Pasos de preparación
   let stepsHtml = '';
   if (Array.isArray(full.steps) && full.steps.length) {
     stepsHtml = `
@@ -823,10 +1101,61 @@ function renderDetail() {
 // ----------------------------------------------------
 
 app.addEventListener('click', (event) => {
+  // Manejo de "Tengo esto" para sumar ingrediente faltante directamente
+  const addMissingBtn = event.target.closest('[data-add-missing]');
+  if (addMissingBtn) {
+    event.stopPropagation();
+    const missingName = addMissingBtn.dataset.addMissing;
+    notify(`¡Sumaste "${missingName}" a tu barra!`);
+    addIngredient(missingName, true);
+    return;
+  }
+
+  // Click en sugerencia de autocompletado
+  const autocompleteTarget = event.target.closest('[data-autocomplete-add]');
+  if (autocompleteTarget) {
+    addIngredient(autocompleteTarget.dataset.autocompleteAdd);
+    const input = document.querySelector('#ingredient-input');
+    if (input) input.value = '';
+    return;
+  }
+
+  // Click en pestaña de categoría de ingredientes
+  const catTab = event.target.closest('[data-select-category]');
+  if (catTab) {
+    activeCategoryTab = catTab.dataset.selectCategory;
+    render();
+    return;
+  }
+
+  // Click en pestaña de resultados ("Podés preparar" vs "Te falta 1 ingrediente")
+  const resultsTab = event.target.closest('[data-results-tab]');
+  if (resultsTab) {
+    resultsActiveTab = resultsTab.dataset.resultsTab;
+    render();
+    return;
+  }
+
+  // Click en filtro rápido de ingrediente faltante
+  const missingChip = event.target.closest('[data-set-missing-filter]');
+  if (missingChip) {
+    filterMissing = missingChip.dataset.setMissingFilter;
+    render();
+    return;
+  }
+
   const target = event.target.closest(
     '[data-action], [data-toggle-frequent], [data-remove-ingredient], [data-open-slug]'
   );
-  if (!target) return;
+  if (!target) {
+    // Si hace click fuera del autocomplete, cerrarlo
+    if (autocompleteSuggestions.length) {
+      autocompleteSuggestions = [];
+      autocompleteHighlightIndex = -1;
+      render();
+    }
+    return;
+  }
 
   if (target.dataset.openSlug) {
     openRecipeDetail(target.dataset.openSlug);
@@ -859,6 +1188,61 @@ app.addEventListener('click', (event) => {
   }
 });
 
+app.addEventListener('input', (event) => {
+  // Input del buscador de ingredientes (Autocompletado)
+  if (event.target.id === 'ingredient-input') {
+    const val = event.target.value.trim().toLowerCase();
+    if (val.length >= 2) {
+      autocompleteSuggestions = AUTOCOMPLETE_INDEX.filter((item) =>
+        item.name.toLowerCase().includes(val) &&
+        !selectedIngredients.some((sel) => sel.toLowerCase() === item.name.toLowerCase())
+      ).slice(0, 6);
+    } else {
+      autocompleteSuggestions = [];
+    }
+    autocompleteHighlightIndex = -1;
+
+    // Actualizar solo el contenedor del dropdown si existe para no perder foco
+    const dropdown = document.querySelector('#autocomplete-list');
+    if (autocompleteSuggestions.length) {
+      if (!dropdown) {
+        render();
+        const input = document.querySelector('#ingredient-input');
+        if (input) {
+          input.focus();
+          input.value = event.target.value;
+        }
+      } else {
+        dropdown.innerHTML = autocompleteSuggestions.map((item, idx) => `
+          <li
+            class="autocomplete-item ${idx === autocompleteHighlightIndex ? 'highlighted' : ''}"
+            role="option"
+            data-autocomplete-add="${esc(item.name)}"
+          >
+            <span>${esc(item.name)}</span>
+            <span class="autocomplete-category">${esc(item.category)}</span>
+          </li>
+        `).join('');
+      }
+    } else if (dropdown) {
+      dropdown.remove();
+    }
+    return;
+  }
+
+  // Input de búsqueda en resultados
+  if (event.target.id === 'drink-search-input') {
+    filterQuery = event.target.value;
+    const cursor = event.target.selectionStart;
+    render();
+    const input = document.querySelector('#drink-search-input');
+    if (input) {
+      input.focus();
+      input.setSelectionRange(cursor, cursor);
+    }
+  }
+});
+
 app.addEventListener('submit', (event) => {
   if (event.target.id === 'add-ingredient-form') {
     event.preventDefault();
@@ -866,8 +1250,15 @@ app.addEventListener('submit', (event) => {
     if (!input) return;
     const value = input.value.trim();
     if (value) {
-      addIngredient(value);
+      // Si había una sugerencia resaltada con teclado
+      if (autocompleteHighlightIndex >= 0 && autocompleteSuggestions[autocompleteHighlightIndex]) {
+        addIngredient(autocompleteSuggestions[autocompleteHighlightIndex].name);
+      } else {
+        addIngredient(value);
+      }
       input.value = '';
+      autocompleteSuggestions = [];
+      autocompleteHighlightIndex = -1;
     }
   }
 });
@@ -880,11 +1271,47 @@ app.addEventListener('change', (event) => {
     } catch {}
     applyTheme();
     render();
+    return;
+  }
+
+  if (event.target.id === 'base-filter-select') {
+    filterBase = event.target.value;
+    render();
+    return;
+  }
+
+  if (event.target.id === 'missing-filter-select') {
+    filterMissing = event.target.value;
+    render();
+    return;
   }
 });
 
-// Accessibility: Allow opening a card with Enter or Space
+// Teclado para navegar sugerencias del autocompletado y accesibilidad
 app.addEventListener('keydown', (event) => {
+  const input = document.querySelector('#ingredient-input');
+  if (input && document.activeElement === input && autocompleteSuggestions.length) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      autocompleteHighlightIndex = (autocompleteHighlightIndex + 1) % autocompleteSuggestions.length;
+      updateAutocompleteHighlight();
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      autocompleteHighlightIndex = (autocompleteHighlightIndex - 1 + autocompleteSuggestions.length) % autocompleteSuggestions.length;
+      updateAutocompleteHighlight();
+      return;
+    }
+    if (event.key === 'Escape') {
+      autocompleteSuggestions = [];
+      autocompleteHighlightIndex = -1;
+      const dropdown = document.querySelector('#autocomplete-list');
+      if (dropdown) dropdown.remove();
+      return;
+    }
+  }
+
   if (event.key === 'Enter' || event.key === ' ') {
     const card = event.target.closest('.drink-card[data-open-slug]');
     if (card && event.target === card) {
@@ -894,13 +1321,20 @@ app.addEventListener('keydown', (event) => {
   }
 });
 
+function updateAutocompleteHighlight() {
+  const items = document.querySelectorAll('.autocomplete-item');
+  items.forEach((item, idx) => {
+    item.classList.toggle('highlighted', idx === autocompleteHighlightIndex);
+  });
+}
+
 matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
   if (themePreference === 'system') applyTheme();
 });
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=9').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=10').catch(() => {});
   });
 }
 

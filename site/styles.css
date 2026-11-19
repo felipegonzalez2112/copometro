@@ -16,7 +16,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--color); }
+body { margin: 0; min-width: 320px; min-height: 100vh; min-height: 100dvh; background: var(--bg); color: #edf2ef; }
 button, input, select, textarea { font: inherit; }
 button { color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -33,7 +33,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   justify-content: space-between;
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 20;
   background: rgb(16 22 23 / 96%);
   backdrop-filter: blur(16px);
 }
@@ -120,10 +120,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   flex-direction: column;
   gap: 20px;
   box-shadow: 0 4px 20px rgb(0 0 0 / 12%);
+  position: relative;
 }
 .ingredient-form {
   display: flex;
   gap: 10px;
+  position: relative;
 }
 .ingredient-input-wrap {
   flex: 1;
@@ -161,15 +163,89 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   padding: 0 18px;
 }
 
-/* Ingredientes Frecuentes */
-.section-subtitle {
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 35px rgb(0 0 0 / 40%);
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 6px;
+  margin: 0;
+}
+.autocomplete-item {
+  padding: 9px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  transition: background .12s;
+  color: inherit;
+}
+.autocomplete-item:hover, .autocomplete-item.highlighted {
+  background: var(--panel);
+  color: var(--gold-light);
+}
+.autocomplete-category {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
   color: var(--muted);
   text-transform: uppercase;
-  margin-bottom: 9px;
+  letter-spacing: .5px;
 }
+
+/* Categorías de Ingredientes */
+.category-tabs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.category-tabs::-webkit-scrollbar {
+  display: none;
+}
+.category-tab {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.category-tab:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+.category-tab.active {
+  border-color: var(--gold);
+  background: var(--panel-2);
+  color: var(--gold-light);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+/* Chips de ingredientes */
 .frequent-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -216,6 +292,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   justify-content: space-between;
   align-items: center;
   margin-bottom: 11px;
+}
+.section-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 0;
 }
 .tags-list {
   display: flex;
@@ -280,11 +364,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 /* Botón principal */
 .search-actions {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   padding-top: 6px;
 }
 .main-search-btn {
-  flex: 1;
+  width: 100%;
   font-size: 16px;
   font-weight: 650;
   min-height: 50px;
@@ -327,11 +412,6 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   border-color: var(--gold);
   color: var(--gold-light);
 }
-.button.danger {
-  border-color: #593a35;
-  background: #2a1e1b;
-  color: #e1a89e;
-}
 
 /* Indicador de carga */
 .loading-box {
@@ -366,38 +446,148 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   to { transform: rotate(360deg); }
 }
 
-/* Secciones de resultados */
-.results-section {
-  margin-top: 40px;
-}
-.results-section-header {
+/* Pestañas de Resultados */
+.results-tabs {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  gap: 10px;
+  margin-top: 36px;
   margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-.results-section-header h2 {
-  margin: 0;
-  font: 500 clamp(22px, 3.5vw, 28px)/1.2 Georgia, serif;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.results-tabs::-webkit-scrollbar {
+  display: none;
 }
-.results-section-header small {
-  display: inline-grid;
-  place-items: center;
-  min-width: 28px;
-  height: 25px;
-  padding: 0 8px;
-  border-radius: 13px;
-  background: var(--panel-2);
-  color: var(--gold-light);
-  font: 600 13px ui-sans-serif, sans-serif;
-}
-.section-note {
-  margin: -6px 0 16px;
+.results-tab {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel);
   color: var(--muted);
   font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.results-tab:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+.results-tab.active {
+  border-color: var(--gold);
+  background: var(--panel-2);
+  color: var(--gold-light);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+.results-tab small {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: var(--line);
+  color: inherit;
+  font-size: 11px;
+}
+.results-tab.active small {
+  background: var(--gold);
+  color: #10201d;
+}
+
+/* Barra de Filtros de Tragos */
+.results-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+.drink-search-wrap {
+  position: relative;
+  min-width: 200px;
+  flex: 1;
+}
+.drink-search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.drink-search-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px 0 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: inherit;
+  font-size: 13px;
+}
+.filter-select {
+  min-height: 38px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: inherit;
+  font-size: 13px;
+}
+
+/* Missing Pill Filters */
+.missing-filter-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+.missing-filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+.missing-filter-chip {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  transition: all .15s;
+}
+.missing-filter-chip:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+.missing-filter-chip.active {
+  border-color: #8c6535;
+  background: rgb(58 35 22 / 92%);
+  color: #f1d394;
+  font-weight: 600;
 }
 
 /* Grid de cócteles */
@@ -523,14 +713,6 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 12px;
-}
 .card-ingredients {
   margin: 6px 0 0;
   color: var(--muted);
@@ -543,22 +725,45 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 .missing-info {
   margin-top: 8px;
-  padding: 6px 9px;
-  border-radius: 7px;
+  padding: 8px 10px;
+  border-radius: 8px;
   background: rgb(217 173 99 / 10%);
   border: 1px solid rgb(217 173 99 / 25%);
   font-size: 12px;
   color: #f1d394;
-  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.missing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .missing-info strong {
-  display: block;
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .5px;
   color: #dec58f;
-  margin-bottom: 2px;
+}
+.add-missing-btn {
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #8c6535;
+  background: rgb(75 48 24 / 70%);
+  color: #fce4b8;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all .15s;
+  cursor: pointer;
+}
+.add-missing-btn:hover {
+  background: #7a4f27;
+  color: #fff;
 }
 .card-footer {
   margin-top: auto;
@@ -765,7 +970,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 /* Toast */
 .toast {
   position: fixed;
-  z-index: 12;
+  z-index: 50;
   left: 50%;
   top: calc(82px + env(safe-area-inset-top, 0px));
   transform: translateX(-50%);
@@ -846,6 +1051,13 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .card-copy h3 {
     font-size: 15px;
   }
+  .results-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .drink-search-wrap, .filter-select {
+    width: 100%;
+  }
   .detail {
     padding-top: 14px;
   }
@@ -893,7 +1105,6 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   color: #24362f;
 }
 :root[data-theme="light"] .catalog-heading h1,
-:root[data-theme="light"] .results-section-header h2,
 :root[data-theme="light"] .detail-info h1,
 :root[data-theme="light"] .detail-block h2,
 :root[data-theme="light"] .empty h3 {
@@ -908,6 +1119,26 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   background: #f8faf8;
   border-color: #cedbd5;
   color: #1f2c29;
+}
+:root[data-theme="light"] .autocomplete-dropdown {
+  background: #ffffff;
+  border-color: #cedbd5;
+  box-shadow: 0 10px 30px rgb(20 40 30 / 12%);
+}
+:root[data-theme="light"] .autocomplete-item:hover,
+:root[data-theme="light"] .autocomplete-item.highlighted {
+  background: #e9efeb;
+  color: #195944;
+}
+:root[data-theme="light"] .category-tab {
+  background: #f6f9f6;
+  border-color: #d1ddd6;
+  color: #4e6158;
+}
+:root[data-theme="light"] .category-tab.active {
+  background: #e0eee7;
+  border-color: #57917e;
+  color: #1b5d48;
 }
 :root[data-theme="light"] .frequent-chip {
   background: #f6f9f6;
@@ -941,6 +1172,35 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 :root[data-theme="light"] .button.secondary:hover {
   border-color: #4c8876;
   color: #1b5d48;
+}
+:root[data-theme="light"] .results-tab {
+  background: #ffffff;
+  border-color: #dce5df;
+  color: #687871;
+}
+:root[data-theme="light"] .results-tab.active {
+  background: #e0eee7;
+  border-color: #57917e;
+  color: #1b5d48;
+}
+:root[data-theme="light"] .results-filter-bar {
+  background: #ffffff;
+  border-color: #dce5df;
+}
+:root[data-theme="light"] .drink-search-input,
+:root[data-theme="light"] .filter-select {
+  background: #f8faf8;
+  border-color: #cedbd5;
+}
+:root[data-theme="light"] .missing-filter-chip {
+  background: #ffffff;
+  border-color: #dce5df;
+  color: #687871;
+}
+:root[data-theme="light"] .missing-filter-chip.active {
+  background: #fbf3e6;
+  border-color: #dec59c;
+  color: #794d18;
 }
 :root[data-theme="light"] .drink-card {
   border-color: #d6e0da;
@@ -976,9 +1236,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 :root[data-theme="light"] .missing-info strong {
   color: #794d18;
 }
-:root[data-theme="light"] .results-section-header small {
-  background: #e5eee8;
-  color: #2e6a54;
+:root[data-theme="light"] .add-missing-btn {
+  background: #f1dfc5;
+  border-color: #d8b482;
+  color: #5c350a;
+}
+:root[data-theme="light"] .add-missing-btn:hover {
+  background: #dfb581;
+  color: #fff;
 }
 :root[data-theme="light"] .detail-block {
   background: #ffffff;
