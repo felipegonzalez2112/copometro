@@ -41,20 +41,20 @@ const INGREDIENT_CATALOG = {
 const COMMON_DRINKS = ['Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila'];
 const COMMON_INGREDIENTS = ['Tónica', 'Soda', 'Coca-Cola', 'Lima', 'Limón', 'Naranja', 'Menta', 'Almíbar / Azúcar'];
 
-// Recetas conocidas que se pueden explorar sin depender de una búsqueda previa.
+// Recetas habituales en Argentina, con medidas aproximadas para un vaso.
 const CLASSIC_COCKTAILS = [
-  { name: 'Gin tonic', emoji: '🍸', style: 'Refrescante', ingredients: ['Gin', 'Tónica', 'Lima'], method: 'Serví gin y mucho hielo en copa. Completá con tónica y terminá con lima.' },
-  { name: 'Fernet con Coca', emoji: '🥃', style: 'Bien argentino', ingredients: ['Fernet', 'Coca-Cola', 'Hielo'], method: 'Llená el vaso de hielo, agregá Fernet y completá suavemente con Coca-Cola.' },
-  { name: 'Cuba Libre', emoji: '🥤', style: 'Clásico tropical', ingredients: ['Ron', 'Coca-Cola', 'Lima', 'Hielo'], method: 'Mezclá ron, hielo y lima. Completá con Coca-Cola.' },
-  { name: 'Mojito', emoji: '🌿', style: 'Fresco', ingredients: ['Ron', 'Menta', 'Lima', 'Almíbar / Azúcar', 'Soda', 'Hielo'], method: 'Machacá menta, lima y azúcar. Sumá ron, hielo y completá con soda.' },
-  { name: 'Negroni', emoji: '🍊', style: 'Aperitivo', ingredients: ['Gin', 'Campari', 'Vermut dulce', 'Naranja', 'Hielo'], method: 'Revolvé todos los ingredientes con hielo y perfumá con cáscara de naranja.' },
-  { name: 'Aperol Spritz', emoji: '🧡', style: 'Liviano', ingredients: ['Aperol', 'Espumante', 'Soda', 'Naranja', 'Hielo'], method: 'En una copa con hielo, combiná Aperol, espumante y un toque de soda.' },
-  { name: 'Margarita', emoji: '🍋', style: 'Cítrico', ingredients: ['Tequila', 'Triple Sec', 'Lima', 'Sal', 'Hielo'], method: 'Agitá tequila, Triple Sec y lima con hielo. Serví en copa con borde de sal.' },
-  { name: 'Old Fashioned', emoji: '🥃', style: 'Intenso', ingredients: ['Whisky', 'Almíbar / Azúcar', 'Angostura Bitters', 'Naranja', 'Hielo'], method: 'Disolvé azúcar y bitters; sumá whisky y revolvé con hielo. Decorá con naranja.' },
-  { name: 'Whisky Sour', emoji: '🍋', style: 'Equilibrado', ingredients: ['Whisky', 'Limón', 'Almíbar / Azúcar', 'Clara de huevo', 'Hielo'], method: 'Agitá fuerte todos los ingredientes con hielo y colá en vaso bajo.' },
-  { name: 'Moscow Mule', emoji: '🫚', style: 'Especiado', ingredients: ['Vodka', 'Ginger Beer', 'Lima', 'Hielo'], method: 'Mezclá vodka y lima con hielo; completá con ginger beer.' },
-  { name: 'Caipirinha', emoji: '🍈', style: 'Brasileño', ingredients: ['Cachaça', 'Lima', 'Almíbar / Azúcar', 'Hielo'], method: 'Machacá lima y azúcar; agregá cachaça y abundante hielo.' },
-  { name: 'Bloody Mary', emoji: '🍅', style: 'Sabroso', ingredients: ['Vodka', 'Jugo de tomate', 'Limón', 'Tabasco', 'Sal', 'Hielo'], method: 'Revolvé todos los ingredientes con hielo y ajustá sal y picante a gusto.' }
+  { name: 'Fernet con Coca', emoji: '🥃', style: 'Bien argentino', ingredients: ['Fernet', 'Coca-Cola'], garnish: ['Hielo'], method: 'Llená un vaso alto con hielo. Agregá 50 ml de Fernet y completá despacio con Coca-Cola (aprox. 150 ml), inclinando el vaso para que haga menos espuma.' },
+  { name: 'M Fernet', emoji: '🧉', style: 'Bien argentino', ingredients: ['Fernet', 'Coca-Cola'], garnish: ['Hielo'], method: 'En un vaso con hielo, serví 30 ml de Fernet y completá con unos 180 ml de Coca-Cola. Queda más suave; ajustá la proporción a gusto.' },
+  { name: 'Gancia con Sprite', emoji: '🍋', style: 'De previa', ingredients: ['Gancia', 'Sprite / Lima-Limón'], garnish: ['Limón', 'Hielo'], method: 'Poné hielo en un vaso, agregá 60 ml de Gancia y completá con Sprite bien fría. Exprimí un gajo de limón.' },
+  { name: 'Fernet con soda', emoji: '🥃', style: 'Aperitivo', ingredients: ['Fernet', 'Soda'], garnish: ['Hielo'], method: 'Serví 50 ml de Fernet sobre hielo y completá con soda fría. Probalo y ajustá la cantidad de soda.' },
+  { name: 'Gin tonic', emoji: '🍸', style: 'Refrescante', ingredients: ['Gin', 'Tónica'], garnish: ['Limón', 'Hielo'], method: 'Llená una copa con hielo, agregá 50 ml de gin y completá con 150 ml de tónica fría. Terminá con una rodaja o piel de limón.' },
+  { name: 'Campari con naranja', emoji: '🍊', style: 'Aperitivo', ingredients: ['Campari', 'Naranja'], garnish: ['Hielo'], method: 'En un vaso alto con hielo serví 50 ml de Campari y completá con jugo de naranja (unos 150 ml). Revolvé suavemente.' },
+  { name: 'Vermú con soda', emoji: '🍷', style: 'De bodegón', ingredients: ['Vermut dulce', 'Soda'], garnish: ['Naranja', 'Hielo'], method: 'Serví 75 ml de vermú sobre hielo y completá con soda fría. Agregá una rodaja de naranja; también va muy bien con una aceituna.' },
+  { name: 'Aperol Spritz', emoji: '🧡', style: 'Para compartir', ingredients: ['Aperol', 'Espumante', 'Soda'], garnish: ['Naranja', 'Hielo'], method: 'En una copa con hielo mezclá 90 ml de espumante, 60 ml de Aperol y un chorrito de soda. Decorá con naranja.' },
+  { name: 'Cuba Libre', emoji: '🥤', style: 'Clásico', ingredients: ['Ron', 'Coca-Cola'], garnish: ['Limón', 'Hielo'], method: 'En vaso alto con hielo serví 50 ml de ron, exprimí un gajo de limón y completá con Coca-Cola.' },
+  { name: 'Mojito', emoji: '🌿', style: 'Fresco', ingredients: ['Ron', 'Menta', 'Limón', 'Almíbar / Azúcar', 'Soda'], garnish: ['Hielo'], method: 'Poné 8 hojas de menta, 25 ml de jugo de limón y 2 cucharaditas de azúcar. Presioná suave, sumá 50 ml de ron, hielo y completá con soda.' },
+  { name: 'Negroni', emoji: '🍊', style: 'Aperitivo', ingredients: ['Gin', 'Campari', 'Vermut dulce'], garnish: ['Naranja', 'Hielo'], method: 'En un vaso bajo con hielo mezclá partes iguales: 30 ml de gin, 30 ml de Campari y 30 ml de vermú rojo. Terminá con naranja.' },
+  { name: 'Destornillador', emoji: '🍊', style: 'Fácil', ingredients: ['Vodka', 'Naranja'], garnish: ['Hielo'], method: 'Serví 50 ml de vodka en un vaso con hielo y completá con 150 ml de jugo de naranja. Revolvé.' }
 ];
 
 // Aliases para la taxonomía de la API de 24cocktails
@@ -852,15 +852,16 @@ function renderClassicsView() {
   return `
     <main class="classics-view">
       <section class="catalog-heading classics-heading">
-        <span class="overline">RECETAS PARA EMPEZAR</span>
-        <h1>Tragos clásicos</h1>
-        <p class="catalog-lead">Los más pedidos, con su preparación breve. Te marcamos en cada uno qué ingredientes ya tenés en tu barra.</p>
+        <span class="overline">LOS DE TODA JUNTADA</span>
+        <h1>Tragos más comunes</h1>
+        <p class="catalog-lead">Recetas bien de acá, con cantidades para un vaso y pasos simples. Las medidas son orientativas: ajustalas a tu gusto.</p>
       </section>
 
       <section class="classics-grid" aria-label="Listado de tragos clásicos">
         ${CLASSIC_COCKTAILS.map((cocktail, index) => {
           const available = cocktail.ingredients.filter((ingredient) => ingredientIsAvailable(ingredient));
           const missing = cocktail.ingredients.filter((ingredient) => !ingredientIsAvailable(ingredient));
+          const allIngredients = [...cocktail.ingredients, ...(cocktail.garnish || [])];
           const ready = missing.length === 0;
           return `
             <article class="classic-card ${ready ? 'is-ready' : ''}">
@@ -871,9 +872,9 @@ function renderClassicsView() {
               <h2>${esc(cocktail.name)}</h2>
               <p class="classic-method">${esc(cocktail.method)}</p>
               <div class="classic-ingredients" aria-label="Ingredientes">
-                ${cocktail.ingredients.map((ingredient) => `
+                ${allIngredients.map((ingredient) => `
                   <span class="classic-ingredient ${ingredientIsAvailable(ingredient) ? 'owned' : 'missing'}">
-                    ${ingredientIsAvailable(ingredient) ? '✓' : '+'} ${esc(ingredient)}
+                    ${ingredientIsAvailable(ingredient) ? '✓' : '+'} ${esc(ingredient)}${cocktail.garnish?.includes(ingredient) ? ' (opcional)' : ''}
                   </span>
                 `).join('')}
               </div>
