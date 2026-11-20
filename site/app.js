@@ -41,6 +41,22 @@ const INGREDIENT_CATALOG = {
 const COMMON_DRINKS = ['Gin', 'Vodka', 'Ron', 'Whisky', 'Fernet', 'Tequila'];
 const COMMON_INGREDIENTS = ['Tónica', 'Soda', 'Coca-Cola', 'Lima', 'Limón', 'Naranja', 'Menta', 'Almíbar / Azúcar'];
 
+// Recetas conocidas que se pueden explorar sin depender de una búsqueda previa.
+const CLASSIC_COCKTAILS = [
+  { name: 'Gin tonic', emoji: '🍸', style: 'Refrescante', ingredients: ['Gin', 'Tónica', 'Lima'], method: 'Serví gin y mucho hielo en copa. Completá con tónica y terminá con lima.' },
+  { name: 'Fernet con Coca', emoji: '🥃', style: 'Bien argentino', ingredients: ['Fernet', 'Coca-Cola', 'Hielo'], method: 'Llená el vaso de hielo, agregá Fernet y completá suavemente con Coca-Cola.' },
+  { name: 'Cuba Libre', emoji: '🥤', style: 'Clásico tropical', ingredients: ['Ron', 'Coca-Cola', 'Lima', 'Hielo'], method: 'Mezclá ron, hielo y lima. Completá con Coca-Cola.' },
+  { name: 'Mojito', emoji: '🌿', style: 'Fresco', ingredients: ['Ron', 'Menta', 'Lima', 'Almíbar / Azúcar', 'Soda', 'Hielo'], method: 'Machacá menta, lima y azúcar. Sumá ron, hielo y completá con soda.' },
+  { name: 'Negroni', emoji: '🍊', style: 'Aperitivo', ingredients: ['Gin', 'Campari', 'Vermut dulce', 'Naranja', 'Hielo'], method: 'Revolvé todos los ingredientes con hielo y perfumá con cáscara de naranja.' },
+  { name: 'Aperol Spritz', emoji: '🧡', style: 'Liviano', ingredients: ['Aperol', 'Espumante', 'Soda', 'Naranja', 'Hielo'], method: 'En una copa con hielo, combiná Aperol, espumante y un toque de soda.' },
+  { name: 'Margarita', emoji: '🍋', style: 'Cítrico', ingredients: ['Tequila', 'Triple Sec', 'Lima', 'Sal', 'Hielo'], method: 'Agitá tequila, Triple Sec y lima con hielo. Serví en copa con borde de sal.' },
+  { name: 'Old Fashioned', emoji: '🥃', style: 'Intenso', ingredients: ['Whisky', 'Almíbar / Azúcar', 'Angostura Bitters', 'Naranja', 'Hielo'], method: 'Disolvé azúcar y bitters; sumá whisky y revolvé con hielo. Decorá con naranja.' },
+  { name: 'Whisky Sour', emoji: '🍋', style: 'Equilibrado', ingredients: ['Whisky', 'Limón', 'Almíbar / Azúcar', 'Clara de huevo', 'Hielo'], method: 'Agitá fuerte todos los ingredientes con hielo y colá en vaso bajo.' },
+  { name: 'Moscow Mule', emoji: '🫚', style: 'Especiado', ingredients: ['Vodka', 'Ginger Beer', 'Lima', 'Hielo'], method: 'Mezclá vodka y lima con hielo; completá con ginger beer.' },
+  { name: 'Caipirinha', emoji: '🍈', style: 'Brasileño', ingredients: ['Cachaça', 'Lima', 'Almíbar / Azúcar', 'Hielo'], method: 'Machacá lima y azúcar; agregá cachaça y abundante hielo.' },
+  { name: 'Bloody Mary', emoji: '🍅', style: 'Sabroso', ingredients: ['Vodka', 'Jugo de tomate', 'Limón', 'Tabasco', 'Sal', 'Hielo'], method: 'Revolvé todos los ingredientes con hielo y ajustá sal y picante a gusto.' }
+];
+
 // Aliases para la taxonomía de la API de 24cocktails
 const INGREDIENT_ALIASES = {
   'ron': 'rum,white_rum',
@@ -174,6 +190,7 @@ const icons = {
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
   bottle: '<svg viewBox="0 0 24 24"><path d="M9 3h6v3l2 2v12H7V8l2-2zM9 6h6M7 11h10"/></svg>',
+  cocktail: '<svg viewBox="0 0 24 24"><path d="M4 4h16l-8 9v6m-3 2h6M7 4l5 9 5-9"/></svg>',
   back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6M9 12h12"/></svg>',
   clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
   external: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>',
@@ -205,7 +222,7 @@ let selectedIngredients = loadSavedIngredients();
 let favorites = loadFavorites();
 
 // Navegación principal
-let activeMainView = 'search'; // 'search' | 'favorites'
+let activeMainView = 'search'; // 'search' | 'classics' | 'favorites'
 
 let searchState = {
   status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
@@ -718,6 +735,21 @@ function clearAllIngredients() {
   render();
 }
 
+function addMissingIngredients(recipeIndex) {
+  const recipe = CLASSIC_COCKTAILS[Number(recipeIndex)];
+  if (!recipe) return;
+  const missing = recipe.ingredients.filter((ingredient) => !ingredientIsAvailable(ingredient));
+  const newItems = missing.filter((ingredient) => !selectedIngredients.some((item) => normalizeIngredientText(item) === normalizeIngredientText(ingredient)));
+  if (!newItems.length) {
+    notify(`Ya tenés los ingredientes de ${recipe.name}`);
+    return;
+  }
+  selectedIngredients.push(...newItems);
+  persistIngredients();
+  notify(`Sumamos ${newItems.length} ingrediente${newItems.length === 1 ? '' : 's'} para ${recipe.name}`);
+  render();
+}
+
 // ----------------------------------------------------
 // FILTRADO DE RESULTADOS
 // ----------------------------------------------------
@@ -778,6 +810,14 @@ function render() {
         </button>
         <button
           type="button"
+          class="nav-tab ${activeMainView === 'classics' && screen.page !== 'detail' ? 'active' : ''}"
+          data-nav="classics"
+        >
+          ${icon('cocktail')}
+          <span>Clásicos</span>
+        </button>
+        <button
+          type="button"
           class="nav-tab ${activeMainView === 'favorites' && screen.page !== 'detail' ? 'active' : ''}"
           data-nav="favorites"
         >
@@ -800,11 +840,52 @@ function render() {
 
     ${notice ? `<div class="toast" role="status">${esc(notice)}</div>` : ''}
 
-    ${screen.page === 'detail' ? renderDetail() : activeMainView === 'favorites' ? renderFavoritesView() : renderHome()}
+    ${screen.page === 'detail' ? renderDetail() : activeMainView === 'favorites' ? renderFavoritesView() : activeMainView === 'classics' ? renderClassicsView() : renderHome()}
 
     <footer class="footer">
       ChinChin · Recomendador de tragos & bitácora · Datos por 24cocktails.com
     </footer>
+  `;
+}
+
+function renderClassicsView() {
+  return `
+    <main class="classics-view">
+      <section class="catalog-heading classics-heading">
+        <span class="overline">RECETAS PARA EMPEZAR</span>
+        <h1>Tragos clásicos</h1>
+        <p class="catalog-lead">Los más pedidos, con su preparación breve. Te marcamos en cada uno qué ingredientes ya tenés en tu barra.</p>
+      </section>
+
+      <section class="classics-grid" aria-label="Listado de tragos clásicos">
+        ${CLASSIC_COCKTAILS.map((cocktail, index) => {
+          const available = cocktail.ingredients.filter((ingredient) => ingredientIsAvailable(ingredient));
+          const missing = cocktail.ingredients.filter((ingredient) => !ingredientIsAvailable(ingredient));
+          const ready = missing.length === 0;
+          return `
+            <article class="classic-card ${ready ? 'is-ready' : ''}">
+              <div class="classic-card-top">
+                <span class="classic-emoji" aria-hidden="true">${cocktail.emoji}</span>
+                <span class="classic-style">${esc(cocktail.style)}</span>
+              </div>
+              <h2>${esc(cocktail.name)}</h2>
+              <p class="classic-method">${esc(cocktail.method)}</p>
+              <div class="classic-ingredients" aria-label="Ingredientes">
+                ${cocktail.ingredients.map((ingredient) => `
+                  <span class="classic-ingredient ${ingredientIsAvailable(ingredient) ? 'owned' : 'missing'}">
+                    ${ingredientIsAvailable(ingredient) ? '✓' : '+'} ${esc(ingredient)}
+                  </span>
+                `).join('')}
+              </div>
+              <div class="classic-card-footer">
+                <span class="classic-status ${ready ? 'ready' : ''}">${ready ? '✓ Podés prepararlo' : `Tenés ${available.length} de ${cocktail.ingredients.length}`}</span>
+                ${missing.length ? `<button type="button" class="classic-add-btn" data-add-classic-missing="${index}">Agregar lo que falta</button>` : ''}
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </section>
+    </main>
   `;
 }
 
@@ -1776,6 +1857,12 @@ app.addEventListener('click', (event) => {
     const missingName = addMissingBtn.dataset.addMissing;
     notify(`¡Sumaste "${missingName}" a tu barra!`);
     addIngredient(missingName, true);
+    return;
+  }
+
+  const addClassicMissingBtn = event.target.closest('[data-add-classic-missing]');
+  if (addClassicMissingBtn) {
+    addMissingIngredients(addClassicMissingBtn.dataset.addClassicMissing);
     return;
   }
 

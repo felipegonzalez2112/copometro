@@ -147,9 +147,13 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   width: min(100% - 40px, 1060px);
   margin: 0 auto;
 }
-.home, .favorites-view {
+.home, .favorites-view, .classics-view {
   padding-top: 32px;
   padding-bottom: calc(60px + var(--safe-bottom));
+}
+.classics-view {
+  width: min(100% - 40px, 1060px);
+  margin: 0 auto;
 }
 .overline {
   display: block;
@@ -171,6 +175,95 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   font-size: 15px;
   line-height: 1.5;
   max-width: 640px;
+}
+
+/* Tragos clásicos */
+.classics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+.classic-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 10%);
+}
+.classic-card.is-ready { border-top-color: var(--success); }
+.classic-card-top, .classic-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.classic-emoji {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #62443e;
+  border-radius: 12px;
+  background: rgb(199 125 109 / 10%);
+  font-size: 22px;
+}
+.classic-style {
+  color: var(--gold-light);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+.classic-card h2 {
+  margin: 16px 0 7px;
+  font: 500 23px/1.1 'DM Serif Display', Georgia, serif;
+}
+.classic-method {
+  min-height: 58px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.classic-ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0;
+}
+.classic-ingredient {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.classic-ingredient.owned { border-color: var(--success); color: var(--success); background: var(--success-bg); }
+.classic-ingredient.missing { color: var(--muted); }
+.classic-card-footer { margin-top: auto; padding-top: 13px; border-top: 1px solid var(--line); }
+.classic-status { color: var(--muted); font-size: 12px; font-weight: 700; }
+.classic-status.ready { color: var(--success); }
+.classic-add-btn {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: var(--gold);
+  color: #241613;
+  font-size: 11px;
+  font-weight: 800;
+}
+.classic-add-btn:hover { background: var(--gold-light); }
+@media (min-width: 760px) {
+  .classics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+}
+@media (max-width: 620px) {
+  .classics-grid { grid-template-columns: 1fr; }
+  .classic-method { min-height: auto; }
 }
 
 /* Card Mis Ingredientes */
@@ -1538,10 +1631,10 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
     flex: 1;
     justify-content: center;
   }
-  .home, .detail, .favorites-view {
+  .home, .detail, .favorites-view, .classics-view {
     width: calc(100% - 28px);
   }
-  .home, .favorites-view {
+  .home, .favorites-view, .classics-view {
     padding-top: 20px;
   }
   .catalog-heading h1 {
